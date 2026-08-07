@@ -484,21 +484,16 @@ export default function BusinessDetailScreen() {
                   }}
                   scrollEventThrottle={16}
                   renderItem={({ item, index }) => (
-                    <LinearGradient
-                      colors={Colors.headerGradient}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        setViewerPhotoIndex(index);
+                        setShowImageViewer(true);
+                      }}
                       style={{ width: width }}
                     >
-                      <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPress={() => {
-                          setViewerPhotoIndex(index);
-                          setShowImageViewer(true);
-                        }}
-                      >
-                        <Image source={{ uri: item }} style={[styles.photo, { width: width }]} resizeMode="contain" />
-                      </TouchableOpacity>
-                    </LinearGradient>
+                      <Image source={{ uri: item }} style={[styles.photo, { width: width }]} resizeMode="cover" />
+                    </TouchableOpacity>
                   )}
                 />
                 {photos.length > 1 && (

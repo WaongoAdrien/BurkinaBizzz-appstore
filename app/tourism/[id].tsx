@@ -11,13 +11,15 @@ import { db } from '../../lib/firebase';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
+import { useAuth } from '../../lib/AuthContext';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 import { Attraction, normalizeUrl } from '../tourism-sites';
+import { EditContentModal } from '../../components/EditContentModal';
 
 registerTranslations({
   'Horaires': 'Opening hours',
   'À propos': 'About',
-  'Contacter': 'Contact',
+  'Informations': 'Information',
   'Appeler': 'Call',
   'Voir sur la carte': 'View on map',
   'Site introuvable': 'Site not found',
@@ -31,10 +33,12 @@ export default function TourismSiteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useColorTheme();
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
 
   const [site, setSite] = useState<Attraction | null>(null);
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [editVisible, setEditVisible] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -72,7 +76,17 @@ export default function TourismSiteDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: site.name, headerShown: true }} />
+      <Stack.Screen options={{
+        title: site.name,
+        headerShown: true,
+        headerRight: () => (
+          isAdmin ? (
+            <TouchableOpacity onPress={() => setEditVisible(true)} style={{ paddingHorizontal: 6 }}>
+              <Ionicons name="pencil" size={20} color="#fff" />
+            </TouchableOpacity>
+          ) : null
+        ),
+      }} />
 
       <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
         {/* PHOTO GALLERY */}
@@ -162,9 +176,9 @@ export default function TourismSiteDetailScreen() {
             <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
               <View style={styles.sectionHeader}>
                 <View style={[styles.sectionIcon, { backgroundColor: Colors.primary + '22' }]}>
-                  <Ionicons name="call-outline" size={16} color={Colors.primary} />
+                  <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
                 </View>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Contacter')}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Informations')}</Text>
               </View>
               <View style={styles.btnRow}>
                 {site.phone && (
@@ -208,6 +222,16 @@ export default function TourismSiteDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {isAdmin && (
+        <EditContentModal
+          visible={editVisible}
+          kind="attractions"
+          item={site}
+          onClose={() => setEditVisible(false)}
+          onSaved={(updated) => setSite(prev => prev ? { ...prev, ...updated } as Attraction : prev)}
+        />
+      )}
     </>
   );
 }

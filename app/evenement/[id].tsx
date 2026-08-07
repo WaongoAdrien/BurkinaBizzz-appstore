@@ -11,13 +11,15 @@ import { db } from '../../lib/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
+import { useAuth } from '../../lib/AuthContext';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 import { EventItem, normalizeUrl } from '../evenement';
+import { EditContentModal } from '../../components/EditContentModal';
 
 registerTranslations({
   'Date': 'Date',
   'À propos': 'About',
-  'Contacter': 'Contact',
+  'Informations': 'Information',
   'Appeler': 'Call',
   'Voir sur la carte': 'View on map',
   'Événement introuvable': 'Event not found',
@@ -30,9 +32,11 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useColorTheme();
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editVisible, setEditVisible] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -68,7 +72,17 @@ export default function EventDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: event.name, headerShown: true }} />
+      <Stack.Screen options={{
+        title: event.name,
+        headerShown: true,
+        headerRight: () => (
+          isAdmin ? (
+            <TouchableOpacity onPress={() => setEditVisible(true)} style={{ paddingHorizontal: 6 }}>
+              <Ionicons name="pencil" size={20} color="#fff" />
+            </TouchableOpacity>
+          ) : null
+        ),
+      }} />
 
       <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
         {/* PHOTO */}
@@ -131,9 +145,9 @@ export default function EventDetailScreen() {
             <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
               <View style={styles.sectionHeader}>
                 <View style={[styles.sectionIcon, { backgroundColor: Colors.primary + '22' }]}>
-                  <Ionicons name="call-outline" size={16} color={Colors.primary} />
+                  <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
                 </View>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Contacter')}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Informations')}</Text>
               </View>
               <View style={styles.btnRow}>
                 {event.phone && (
@@ -177,6 +191,16 @@ export default function EventDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {isAdmin && (
+        <EditContentModal
+          visible={editVisible}
+          kind="events"
+          item={event}
+          onClose={() => setEditVisible(false)}
+          onSaved={(updated) => setEvent(prev => prev ? { ...prev, ...updated } as EventItem : prev)}
+        />
+      )}
     </>
   );
 }
