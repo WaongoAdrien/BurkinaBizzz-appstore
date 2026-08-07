@@ -36,6 +36,22 @@ registerTranslations({
   'Le pays est aussi réputé pour son artisanat, ses masques rituels, et sa musique au djembé et au balafon, qui rythment les fêtes villageoises. Sa scène culturelle rayonne bien au-delà de ses frontières grâce au FESPACO, le plus grand festival de cinéma d\'Afrique, organisé tous les deux ans à Ouagadougou.':
     "The country is also renowned for its craftsmanship, ritual masks, and djembe and balafon music, which set the rhythm for village celebrations. Its cultural scene reaches well beyond its borders thanks to FESPACO, Africa's largest film festival, held every two years in Ouagadougou.",
   'Danseurs traditionnels en pays kasena': 'Traditional dancers in Kasena country',
+  'Art et artisanat': 'Art and craftsmanship',
+  "La sculpture, les masques rituels, le tissage et le travail du bronze et du cuir occupent une place centrale dans la vie burkinabè. Transmis de génération en génération, ces savoir-faire artisanaux allient fonction rituelle et valeur artistique, et se retrouvent aussi bien dans les cérémonies villageoises que sur les marchés d'art contemporain.":
+    "Sculpture, ritual masks, weaving, and bronze and leatherwork hold a central place in Burkinabè life. Passed down through generations, these artisanal skills combine ritual function with artistic value, and are found both in village ceremonies and in contemporary art markets.",
+  'Sculpture et artisanat traditionnel burkinabè': 'Traditional Burkinabè sculpture and craftsmanship',
+  'Croyances et spiritualité': 'Beliefs and spirituality',
+  "Aux côtés de l'islam et du christianisme, les religions traditionnelles africaines restent profondément ancrées dans la société burkinabè. Cultes des ancêtres, rites d'initiation et sites naturels sacrés — mares, bois et collines — structurent encore aujourd'hui la vie spirituelle de nombreuses communautés, dans un esprit de coexistence pacifique entre les croyances.":
+    "Alongside Islam and Christianity, traditional African religions remain deeply rooted in Burkinabè society. Ancestor worship, initiation rites, and sacred natural sites — ponds, groves, and hills — still shape the spiritual life of many communities today, in a spirit of peaceful coexistence between faiths.",
+  'Rite traditionnel burkinabè': 'Traditional Burkinabè ritual',
+  'Cuisine et gastronomie': 'Cuisine and gastronomy',
+  "La cuisine burkinabè repose sur des céréales locales — mil, sorgho et maïs — souvent servies en pâte (tô) accompagnée de sauces à base de gombo, de feuilles de baobab ou d'arachide. Riz gras, poulet bicyclette et brochettes grillées complètent un répertoire culinaire convivial, généralement partagé en famille ou entre voisins.":
+    "Burkinabè cuisine is built on local grains — millet, sorghum, and corn — often served as a paste (tô) with okra, baobab leaf, or peanut-based sauces. Riz gras, free-range \"bicycle chicken,\" and grilled skewers round out a convivial culinary repertoire, typically shared among family or neighbors.",
+  'Le tô, plat traditionnel accompagné de sauce gombo': 'Tô, a traditional dish served with okra sauce',
+  'Habits traditionnels et textiles': 'Traditional dress and textiles',
+  "Le boubou ample, le faso dan fani (tissu tissé à la main) et les parures perlées marquent les grandes occasions — mariages, baptêmes et fêtes coutumières. Le faso dan fani, en particulier, est devenu un symbole de fierté nationale et de valorisation du savoir-faire textile local depuis les années 1990.":
+    "The flowing boubou, faso dan fani (hand-woven cloth), and beaded ornaments mark major occasions — weddings, baptisms, and traditional festivals. Faso dan fani in particular has become a symbol of national pride and of championing local textile craftsmanship since the 1990s.",
+  'Tissage traditionnel du faso dan fani': 'Traditional weaving of faso dan fani',
   'Visa électronique (eVisa)': 'Electronic visa (eVisa)',
   'Site officiel visaburkina.bf': 'Official site visaburkina.bf',
   'Fiche de voyage officielle': 'Official travel advisory',
@@ -47,7 +63,8 @@ registerTranslations({
   'Découvrez les plus beaux sites touristiques du Burkina Faso': "Discover Burkina Faso's most beautiful tourist sites",
 });
 
-const HERO_IMAGE = require('../assets/maps.png');
+// Hero — was a static country-outline map (assets/maps.png); swapped for a cultural photo per request.
+const HERO_IMAGE = { uri: 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1771174260/mario-la-pergola-u6qz22_ygoi-unsplash_1_.jpg_kg3paz.webp' };
 const TOURISM_CTA_IMAGE = require('../assets/maps.png');
 
 const EVISA_URL = 'https://www.visaburkina.bf/en/home/';
@@ -59,6 +76,11 @@ const GEOGRAPHY_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/
 const MOSQUE_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Moschee_von_Bobo-Dioulasso.jpg/1280px-Moschee_von_Bobo-Dioulasso.jpg';
 // Traditional Kasena dancers, Tiébélé — Zaongo Christian Marie Michel, CC BY-SA 4.0 (Wikimedia Commons)
 const DANCERS_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Ti%C3%A9b%C3%A9l%C3%A9.jpg/1280px-Ti%C3%A9b%C3%A9l%C3%A9.jpg';
+// New culture sections, sourced from visiteburkina.com/culture
+const ART_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1771174260/mario-la-pergola-u6qz22_ygoi-unsplash_1_.jpg_kg3paz.webp';
+const BELIEFS_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1769562576/arton54844-2973e_ertjhd.jpg';
+const CUISINE_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1769562780/Tot-%C3%A0-la-sauce-gombo_xut0tg.jpg';
+const TEXTILES_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1771174432/MnUne_qcafos.jpg';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -159,6 +181,34 @@ export default function AboutBurkinaScreen() {
               {t("Le pays est aussi réputé pour son artisanat, ses masques rituels, et sa musique au djembé et au balafon, qui rythment les fêtes villageoises. Sa scène culturelle rayonne bien au-delà de ses frontières grâce au FESPACO, le plus grand festival de cinéma d'Afrique, organisé tous les deux ans à Ouagadougou.")}
             </Text>
             <SectionImage uri={DANCERS_IMAGE} caption={t('Danseurs traditionnels en pays kasena')} />
+          </Section>
+
+          <Section title={t('Art et artisanat')}>
+            <Text style={styles.paragraph}>
+              {t("La sculpture, les masques rituels, le tissage et le travail du bronze et du cuir occupent une place centrale dans la vie burkinabè. Transmis de génération en génération, ces savoir-faire artisanaux allient fonction rituelle et valeur artistique, et se retrouvent aussi bien dans les cérémonies villageoises que sur les marchés d'art contemporain.")}
+            </Text>
+            <SectionImage uri={ART_IMAGE} caption={t('Sculpture et artisanat traditionnel burkinabè')} />
+          </Section>
+
+          <Section title={t('Croyances et spiritualité')}>
+            <Text style={styles.paragraph}>
+              {t("Aux côtés de l'islam et du christianisme, les religions traditionnelles africaines restent profondément ancrées dans la société burkinabè. Cultes des ancêtres, rites d'initiation et sites naturels sacrés — mares, bois et collines — structurent encore aujourd'hui la vie spirituelle de nombreuses communautés, dans un esprit de coexistence pacifique entre les croyances.")}
+            </Text>
+            <SectionImage uri={BELIEFS_IMAGE} caption={t('Rite traditionnel burkinabè')} />
+          </Section>
+
+          <Section title={t('Cuisine et gastronomie')}>
+            <Text style={styles.paragraph}>
+              {t("La cuisine burkinabè repose sur des céréales locales — mil, sorgho et maïs — souvent servies en pâte (tô) accompagnée de sauces à base de gombo, de feuilles de baobab ou d'arachide. Riz gras, poulet bicyclette et brochettes grillées complètent un répertoire culinaire convivial, généralement partagé en famille ou entre voisins.")}
+            </Text>
+            <SectionImage uri={CUISINE_IMAGE} caption={t('Le tô, plat traditionnel accompagné de sauce gombo')} />
+          </Section>
+
+          <Section title={t('Habits traditionnels et textiles')}>
+            <Text style={styles.paragraph}>
+              {t("Le boubou ample, le faso dan fani (tissu tissé à la main) et les parures perlées marquent les grandes occasions — mariages, baptêmes et fêtes coutumières. Le faso dan fani, en particulier, est devenu un symbole de fierté nationale et de valorisation du savoir-faire textile local depuis les années 1990.")}
+            </Text>
+            <SectionImage uri={TEXTILES_IMAGE} caption={t('Tissage traditionnel du faso dan fani')} />
           </Section>
 
           {/* TOURISM CTA */}

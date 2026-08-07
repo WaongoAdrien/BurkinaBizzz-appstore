@@ -32,6 +32,7 @@ registerTranslations({
   'Supprimer': 'Delete',
   'Impossible de supprimer.': 'Unable to delete.',
   'Doublon avec :': 'Duplicate with:',
+  'Enregistrer quand même': 'Save anyway',
   ' (identique)': ' (identical)',
   ' (très similaire)': ' (very similar)',
   ' (faute probable)': ' (likely typo)',
@@ -200,6 +201,7 @@ const DUPE_THRESHOLD = 0.8;
 const WORD_OVERLAP_THRESHOLD = 0.75;
 const isSameIgnoringSpacesAndPunct = (a: string, b: string) =>
   a.toLowerCase().replace(/[\s.,\-']/g, '') === b.toLowerCase().replace(/[\s.,\-']/g, '');
+
 // ───────────────────────────────────────────────────────────────────────────
 
 export default function AdminScreen() {
@@ -240,6 +242,15 @@ export default function AdminScreen() {
 
   // Priority modal
   const [priorityModal, setPriorityModal] = useState<{ visible: boolean; item: any | null; value: string; collection: string }>({ visible: false, item: null, value: '', collection: 'businesses' });
+
+  // Alert.alert has no UI on react-native-web, so two-button confirms silently
+  // no-op there. This in-app modal works identically on web and native.
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; title: string; message: string; confirmText: string; cancelText: string; onConfirm: () => void }>({
+    visible: false, title: '', message: '', confirmText: '', cancelText: '', onConfirm: () => {},
+  });
+  const confirmDialog = (title: string, message: string, confirmText: string, cancelText: string, onConfirm: () => void) => {
+    setConfirmModal({ visible: true, title, message, confirmText, cancelText, onConfirm });
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -317,6 +328,22 @@ export default function AdminScreen() {
     openAddContent(kind);
   };
 
+  const persistContent = async (collectionName: string, editId: string | null, payload: any) => {
+    setSavingContent(true);
+    try {
+      if (editId) {
+        await updateDoc(doc(db, collectionName, editId), payload);
+      } else {
+        await addDoc(collection(db, collectionName), { ...payload, createdAt: serverTimestamp() });
+      }
+      closeContentForm();
+    } catch (e: any) {
+      Alert.alert(t('Erreur'), e?.message || t("Impossible d'enregistrer."));
+    } finally {
+      setSavingContent(false);
+    }
+  };
+
   const saveContent = async () => {
     const { kind, editId, name, category, location, phone, image, photos, schedule, date, description, mapLink, facebook, website, latitude, longitude } = contentForm;
     if (!name.trim() || !category.trim() || !location.trim()) {
@@ -340,19 +367,25 @@ export default function AdminScreen() {
       payload.longitude = longitude;
     }
 
-    setSavingContent(true);
-    try {
-      if (editId) {
-        await updateDoc(doc(db, collectionName, editId), payload);
-      } else {
-        await addDoc(collection(db, collectionName), { ...payload, createdAt: serverTimestamp() });
+    if (!editId) {
+      const existing = kind === 'events' ? events : attractions;
+      const dupes = existing
+        .map(b => ({ ...b, _exact: isSameIgnoringSpacesAndPunct(b.name, payload.name), _score: diceSimilarity(b.name, payload.name), _wordScore: wordOverlapScore(b.name, payload.name) }))
+        .filter(b => b._exact || b._score >= DUPE_THRESHOLD || b._wordScore >= WORD_OVERLAP_THRESHOLD);
+      if (dupes.length > 0) {
+        const dupeNote = dupes.map(b => `"${b.name}"${b._exact ? t(' (identique)') : b._score >= DUPE_THRESHOLD ? t(' (très similaire)') : t(' (faute probable)')}`).join(', ');
+        confirmDialog(
+          t('Doublon détecté'),
+          `${t('Doublon avec :')} ${dupeNote}`,
+          t('Enregistrer quand même'),
+          t('Annuler'),
+          () => persistContent(collectionName, editId, payload)
+        );
+        return;
       }
-      closeContentForm();
-    } catch (e: any) {
-      Alert.alert(t('Erreur'), e?.message || t("Impossible d'enregistrer."));
-    } finally {
-      setSavingContent(false);
     }
+
+    await persistContent(collectionName, editId, payload);
   };
 
   const deleteContent = (kind: ContentKind, item: any) => {
@@ -731,8 +764,22 @@ export default function AdminScreen() {
     </View>
   );
 
-  const renderContentItem = (kind: ContentKind) => ({ item }: { item: any }) => (
-    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+  const renderContentItem = (kind: ContentKind) => ({ item }: { item: any }) => {
+    const contentDupes = (kind === 'events' ? events : attractions)
+      .filter(b => b.id !== item.id)
+      .map(b => ({ ...b, _exact: isSameIgnoringSpacesAndPunct(b.name, item.name), _score: diceSimilarity(b.name, item.name), _wordScore: wordOverlapScore(b.name, item.name) }))
+      .filter(b => b._exact || b._score >= DUPE_THRESHOLD || b._wordScore >= WORD_OVERLAP_THRESHOLD);
+    return (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: contentDupes.length > 0 ? '#FFB300' : theme.border, borderWidth: contentDupes.length > 0 ? 2 : 1 }]}>
+      {contentDupes.length > 0 && (
+        <View style={styles.dupeBanner}>
+          <MaterialIcons name="warning" size={14} color="#E65100" />
+          <Text style={styles.dupeBannerText}>
+            {contentDupes.some(b => b._exact) ? t('Nom quasi-identique') : t('Doublon possible')}{' — '}
+            {contentDupes.map(b => `"${b.name}"${b._exact ? t(' (identique)') : b._score >= DUPE_THRESHOLD ? t(' (très similaire)') : t(' (faute probable)')}`).join(', ')}
+          </Text>
+        </View>
+      )}
       <View style={styles.cardTop}>
         <View style={[styles.avatar, { backgroundColor: Colors.primary + '33' }]}>
           <MaterialIcons name={kind === 'events' ? 'event' : 'photo-camera'} size={20} color={Colors.primary} />
@@ -789,7 +836,8 @@ export default function AdminScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  );
+    );
+  };
 
   if (authLoading) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} size="large" />;
   if (!isAdmin) return null;
@@ -1345,6 +1393,42 @@ export default function AdminScreen() {
                   ? <ActivityIndicator size="small" color="#fff" />
                   : <Text style={[styles.modalBtnText, { color: '#fff', fontWeight: '400' }]}>{t('Enregistrer')}</Text>
                 }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* GENERIC CONFIRM MODAL — cross-platform stand-in for Alert.alert's two-button confirm.
+          Rendered after the add/edit modal so it stacks visually on top of it. */}
+      <Modal
+        visible={confirmModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmModal(prev => ({ ...prev, visible: false }))}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: theme.card }]}>
+            <View style={styles.modalTitleRow}>
+              <MaterialIcons name="warning" size={18} color="#E65100" />
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{confirmModal.title}</Text>
+            </View>
+            <Text style={[styles.modalSub, { color: theme.textSecondary }]}>{confirmModal.message}</Text>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { borderColor: theme.border }]}
+                onPress={() => setConfirmModal(prev => ({ ...prev, visible: false }))}
+              >
+                <Text style={[styles.modalBtnText, { color: theme.textSecondary }]}>{confirmModal.cancelText}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: Colors.cta, borderColor: Colors.cta }]}
+                onPress={() => {
+                  setConfirmModal(prev => ({ ...prev, visible: false }));
+                  confirmModal.onConfirm();
+                }}
+              >
+                <Text style={[styles.modalBtnText, { color: '#1A1A1A', fontWeight: '400' }]}>{confirmModal.confirmText}</Text>
               </TouchableOpacity>
             </View>
           </View>
