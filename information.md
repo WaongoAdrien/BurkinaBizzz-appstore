@@ -29,7 +29,7 @@ export type Category =
   | 'Immobilier'
   | 'Autre';
 
-[REDACTED]
+[REDACTED — Resend API key removed, rotate in Resend dashboard]
 
   this my claude AI link to make update easy: https://claude.ai/share/8f986d7c-7362-4fbc-9544-dd94d470e345 
 icon : https://ionic.io/ionicons
