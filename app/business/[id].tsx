@@ -484,16 +484,21 @@ export default function BusinessDetailScreen() {
                   }}
                   scrollEventThrottle={16}
                   renderItem={({ item, index }) => (
-                    <TouchableOpacity 
-                      activeOpacity={0.9}
-                      onPress={() => {
-                        setViewerPhotoIndex(index);
-                        setShowImageViewer(true);
-                      }}
+                    <LinearGradient
+                      colors={Colors.headerGradient}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                       style={{ width: width }}
                     >
-                      <Image source={{ uri: item }} style={[styles.photo, { width: width }]} resizeMode="cover" />
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => {
+                          setViewerPhotoIndex(index);
+                          setShowImageViewer(true);
+                        }}
+                      >
+                        <Image source={{ uri: item }} style={[styles.photo, { width: width }]} resizeMode="contain" />
+                      </TouchableOpacity>
+                    </LinearGradient>
                   )}
                 />
                 {photos.length > 1 && (
@@ -989,22 +994,22 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '400', marginBottom: 10 },
   description: { fontSize: 14, lineHeight: 22 },
   contactRow: { flexDirection: 'row', gap: 10 },
-  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 7, gap: 6 },
+  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 7, gap: 6 },
   contactBtnText: { color: '#fff', fontSize: 15, fontWeight: '400' },
   socialRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
-  socialBtn: { flex: 1, minWidth: 140, alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 7 },
+  socialBtn: { flex: 1, minWidth: 140, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 7 },
   socialBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
   mapsBtnAddress: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
   mapsBtnCoords: { fontSize: 11, marginTop: 2 },
   mapsNavBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: Colors.headerGradient[0], borderRadius: 7, paddingVertical: 13,
+    backgroundColor: Colors.headerGradient[0], borderRadius: 7, paddingVertical: 8,
   },
   mapsNavBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
   actionRow: { flexDirection: 'row', gap: 10, marginHorizontal: 16 },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 13, borderRadius: 5,
+    paddingVertical: 8, borderRadius: 5,
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6 },
       android: { elevation: 3 },
@@ -1024,9 +1029,9 @@ const styles = StyleSheet.create({
   reportOption: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1.5, borderRadius: 6, padding: 12, marginBottom: 8 },
   reportOptionText: { fontSize: 14, fontWeight: '400' },
   modalBtns: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  modalCancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 7, paddingVertical: 14, alignItems: 'center' },
+  modalCancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 7, paddingVertical: 8, alignItems: 'center' },
   modalCancelText: { fontSize: 15, fontWeight: '400' },
-  modalSubmitBtn: { flex: 1, backgroundColor: Colors.headerGradient[0], borderRadius: 7, paddingVertical: 14, alignItems: 'center' },
+  modalSubmitBtn: { flex: 1, backgroundColor: Colors.headerGradient[0], borderRadius: 7, paddingVertical: 8, alignItems: 'center' },
   modalSubmitText: { fontSize: 15, fontWeight: '400', color: '#fff' },
   imageViewerContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   imageViewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
