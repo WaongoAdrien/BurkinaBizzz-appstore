@@ -8,9 +8,36 @@ import {
   KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ExpoLocation from 'expo-location';
 import { Colors } from '../constants';
 import { BusinessLocation } from '../types/index2';
+import { useTranslation, registerTranslations } from '../lib/LanguageContext';
+
+registerTranslations({
+  "📍 Appuyez sur la carte pour placer l'épingle": '📍 Tap the map to place the pin',
+  '📍 Ouagadougou (défaut) — touchez la carte': '📍 Ouagadougou (default) — tap the map',
+  'Permission refusée': 'Permission denied',
+  'Activez la localisation dans les paramètres.': 'Enable location in settings.',
+  'Erreur': 'Error',
+  "Impossible d'obtenir votre position.": 'Unable to get your position.',
+  'Requis': 'Required',
+  'Entrez une adresse ou utilisez la carte.': 'Enter an address or use the map.',
+  'Appuyez sur la carte pour placer une épingle.': 'Tap the map to place a pin.',
+  'Annuler': 'Cancel',
+  '📍 Localisation': '📍 Location',
+  'Confirmer': 'Confirm',
+  '✏️ Adresse': '✏️ Address',
+  '🗺️ Carte': '🗺️ Map',
+  'Localisation en cours...': 'Getting location...',
+  'Utiliser ma position GPS': 'Use my GPS location',
+  'ou entrez une adresse': 'or enter an address',
+  'Adresse / Quartier / Repère': 'Address / District / Landmark',
+  'Ex: Secteur 15, près du marché Rood Woko, Ouagadougou': 'E.g: Sector 15, near Rood Woko market, Ouagadougou',
+  '💡 Soyez précis: quartier, rue, bâtiment de référence (école, mosquée, marché...)': '💡 Be precise: district, street, landmark (school, mosque, market...)',
+  '🗑️ Supprimer la localisation': '🗑️ Remove location',
+  'Chargement OpenStreetMap...': 'Loading OpenStreetMap...',
+});
 
 interface Props {
   visible: boolean;
@@ -25,7 +52,7 @@ type Tab = 'address' | 'map';
 const DEFAULT_LAT = 12.3714;  // Ouagadougou
 const DEFAULT_LNG = -1.5197;
 
-const buildMapHTML = (lat: number, lng: number) => `
+const buildMapHTML = (lat: number, lng: number, hintText: string, barText: string) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -49,8 +76,8 @@ const buildMapHTML = (lat: number, lng: number) => `
   </style>
 </head>
 <body>
-  <div id="hint">📍 Appuyez sur la carte pour placer l'épingle</div>
-  <div id="bar">📍 Ouagadougou (défaut) — touchez la carte</div>
+  <div id="hint">${hintText}</div>
+  <div id="bar">${barText}</div>
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -91,6 +118,7 @@ const buildMapHTML = (lat: number, lng: number) => `
 </html>`;
 
 export default function LocationPicker({ visible, current, onConfirm, onClose, theme }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('address');
   const [address, setAddress] = useState(current?.address || '');
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(
@@ -105,7 +133,7 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
     try {
       const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission refusée', 'Activez la localisation dans les paramètres.');
+        Alert.alert(t('Permission refusée'), t('Activez la localisation dans les paramètres.'));
         return;
       }
       const loc = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.High });
@@ -121,7 +149,7 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
         true;
       `);
     } catch {
-      Alert.alert('Erreur', "Impossible d'obtenir votre position.");
+      Alert.alert(t('Erreur'), t("Impossible d'obtenir votre position."));
     } finally {
       setGpsLoading(false);
     }
@@ -130,13 +158,13 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
   const handleConfirm = () => {
     if (tab === 'address') {
       if (!address.trim()) {
-        Alert.alert('Requis', "Entrez une adresse ou utilisez la carte.");
+        Alert.alert(t('Requis'), t("Entrez une adresse ou utilisez la carte."));
         return;
       }
       onConfirm({ address: address.trim() });
     } else {
       if (!pin) {
-        Alert.alert('Requis', "Appuyez sur la carte pour placer une épingle.");
+        Alert.alert(t('Requis'), t("Appuyez sur la carte pour placer une épingle."));
         return;
       }
       onConfirm({
@@ -159,31 +187,35 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <LinearGradient
+        colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
+        style={styles.modal}
+      >
       <KeyboardAvoidingView
-        style={[styles.modal, { backgroundColor: theme.background }]}
+        style={styles.modal}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* HEADER */}
         <View style={[styles.header, { borderColor: theme.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
-            <Text style={[styles.cancel, { color: theme.textSecondary }]}>Annuler</Text>
+            <Text style={[styles.cancel, { color: theme.textSecondary }]}>{t('Annuler')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>📍 Localisation</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t('📍 Localisation')}</Text>
           <TouchableOpacity onPress={handleConfirm} style={styles.headerBtn}>
-            <Text style={styles.confirm}>Confirmer</Text>
+            <Text style={styles.confirm}>{t('Confirmer')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* TABS */}
         <View style={[styles.tabRow, { backgroundColor: theme.surface }]}>
-          {(['address', 'map'] as Tab[]).map(t => (
+          {(['address', 'map'] as Tab[]).map(tabKey => (
             <TouchableOpacity
-              key={t}
-              style={[styles.tabBtn, tab === t && { backgroundColor: Colors.primary }]}
-              onPress={() => setTab(t)}
+              key={tabKey}
+              style={[styles.tabBtn, tab === tabKey && { backgroundColor: Colors.primary }]}
+              onPress={() => setTab(tabKey)}
             >
-              <Text style={[styles.tabText, { color: tab === t ? '#fff' : theme.textSecondary }]}>
-                {t === 'address' ? '✏️ Adresse' : '🗺️ Carte'}
+              <Text style={[styles.tabText, { color: tab === tabKey ? '#fff' : theme.textSecondary }]}>
+                {tabKey === 'address' ? t('✏️ Adresse') : t('🗺️ Carte')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -203,17 +235,17 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
                 : <Text style={styles.gpsBtnIcon}>📡</Text>
               }
               <Text style={[styles.gpsBtnText, { color: Colors.primary }]}>
-                {gpsLoading ? 'Localisation en cours...' : 'Utiliser ma position GPS'}
+                {gpsLoading ? t('Localisation en cours...') : t('Utiliser ma position GPS')}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.orRow}>
               <View style={[styles.orLine, { backgroundColor: theme.border }]} />
-              <Text style={[styles.orText, { color: theme.textSecondary }]}>ou entrez une adresse</Text>
+              <Text style={[styles.orText, { color: theme.textSecondary }]}>{t('ou entrez une adresse')}</Text>
               <View style={[styles.orLine, { backgroundColor: theme.border }]} />
             </View>
 
-            <Text style={[styles.label, { color: theme.text }]}>Adresse / Quartier / Repère</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t('Adresse / Quartier / Repère')}</Text>
             <TextInput
               style={[styles.addressInput, {
                 borderColor: theme.border,
@@ -222,7 +254,7 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
               }]}
               value={address}
               onChangeText={setAddress}
-              placeholder="Ex: Secteur 15, près du marché Rood Woko, Ouagadougou"
+              placeholder={t('Ex: Secteur 15, près du marché Rood Woko, Ouagadougou')}
               placeholderTextColor={theme.textSecondary}
               multiline
               numberOfLines={3}
@@ -231,7 +263,7 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
             />
 
             <Text style={[styles.hint, { color: theme.textSecondary }]}>
-              💡 Soyez précis: quartier, rue, bâtiment de référence (école, mosquée, marché...)
+              {t('💡 Soyez précis: quartier, rue, bâtiment de référence (école, mosquée, marché...)')}
             </Text>
 
             {pin && (
@@ -245,7 +277,7 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
 
             {(address.trim() || pin) && (
               <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
-                <Text style={styles.clearText}>🗑️ Supprimer la localisation</Text>
+                <Text style={styles.clearText}>{t('🗑️ Supprimer la localisation')}</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
@@ -266,14 +298,14 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
               <View style={styles.mapLoading}>
                 <ActivityIndicator color={Colors.primary} size="large" />
                 <Text style={[styles.mapLoadingText, { color: theme.textSecondary }]}>
-                  Chargement OpenStreetMap...
+                  {t('Chargement OpenStreetMap...')}
                 </Text>
               </View>
             )}
 
             <WebView
               ref={webviewRef}
-              source={{ html: buildMapHTML(startLat, startLng) }}
+              source={{ html: buildMapHTML(startLat, startLng, t("📍 Appuyez sur la carte pour placer l'épingle"), t('📍 Ouagadougou (défaut) — touchez la carte')) }}
               style={styles.webview}
               onLoadEnd={() => setMapLoading(false)}
               onMessage={e => {
@@ -298,6 +330,7 @@ export default function LocationPicker({ visible, current, onConfirm, onClose, t
           </View>
         )}
       </KeyboardAvoidingView>
+      </LinearGradient>
     </Modal>
   );
 }
@@ -310,39 +343,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1,
   },
   headerBtn: { minWidth: 80 },
-  headerTitle: { fontSize: 17, fontWeight: '800' },
+  headerTitle: { fontSize: 17, fontWeight: '400' },
   cancel: { fontSize: 15 },
-  confirm: { fontSize: 15, fontWeight: '800', color: Colors.primary, textAlign: 'right' },
+  confirm: { fontSize: 15, fontWeight: '400', color: Colors.primary, textAlign: 'right' },
 
   tabRow: {
-    flexDirection: 'row', margin: 14, borderRadius: 12, padding: 4, gap: 4,
+    flexDirection: 'row', margin: 14, borderRadius: 7, padding: 4, gap: 4,
   },
-  tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
-  tabText: { fontSize: 14, fontWeight: '700' },
+  tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 5, alignItems: 'center' },
+  tabText: { fontSize: 14, fontWeight: '400' },
 
   body: { padding: 16, gap: 14 },
   gpsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, borderWidth: 2, borderRadius: 12, paddingVertical: 14,
+    gap: 8, borderWidth: 2, borderRadius: 7, paddingVertical: 14,
   },
   gpsBtnIcon: { fontSize: 20 },
-  gpsBtnText: { fontSize: 15, fontWeight: '700' },
+  gpsBtnText: { fontSize: 15, fontWeight: '400' },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   orLine: { flex: 1, height: 1 },
   orText: { fontSize: 12 },
-  label: { fontSize: 13, fontWeight: '600' },
+  label: { fontSize: 13, fontWeight: '400' },
   addressInput: {
-    borderWidth: 1.5, borderRadius: 10, padding: 12,
+    borderWidth: 1.5, borderRadius: 6, padding: 12,
     fontSize: 14, minHeight: 80,
   },
   hint: { fontSize: 12, lineHeight: 18 },
   pinBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    borderWidth: 1, borderRadius: 10, padding: 12,
+    borderWidth: 1, borderRadius: 6, padding: 12,
   },
   pinBadgeText: { flex: 1, fontSize: 12 },
   clearBtn: { alignItems: 'center', paddingVertical: 10 },
-  clearText: { color: '#D32F2F', fontSize: 14, fontWeight: '600' },
+  clearText: { color: '#D32F2F', fontSize: 14, fontWeight: '400' },
 
   mapWrap: { flex: 1, position: 'relative' },
   webview: { flex: 1 },
@@ -355,14 +388,14 @@ const styles = StyleSheet.create({
   gpsFloat: {
     position: 'absolute', top: 16, right: 16, zIndex: 20,
     backgroundColor: Colors.primary, width: 44, height: 44,
-    borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 13, alignItems: 'center', justifyContent: 'center',
     elevation: 5, shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4,
   },
   coordBar: {
     position: 'absolute', bottom: 16, left: 16, right: 16, zIndex: 20,
-    backgroundColor: Colors.primary, borderRadius: 10,
+    backgroundColor: Colors.primary, borderRadius: 6,
     paddingVertical: 11, alignItems: 'center',
   },
-  coordBarText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  coordBarText: { color: '#fff', fontSize: 13, fontWeight: '400' },
 });
