@@ -28,6 +28,7 @@ import { useTranslation, registerTranslations } from '../../lib/LanguageContext'
 
 registerTranslations({
   'Utilisateur': 'User',
+  'Voir aussi': 'See also',
   'Entreprise introuvable': 'Business not found',
   "Impossible d'ouvrir Facebook.": 'Unable to open Facebook.',
   "Impossible d'ouvrir.": 'Unable to open.',
@@ -182,6 +183,7 @@ export default function BusinessDetailScreen() {
   const { user, userProfile, isAdmin } = useAuth();
   const { isLiked, toggleLike } = useLikes(user?.uid);
   const { t } = useTranslation();
+  const scrollRef = useRef<ScrollView>(null);
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
@@ -205,13 +207,23 @@ export default function BusinessDetailScreen() {
   const [reportReason, setReportReason] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
 
+  const [relatedBusiness, setRelatedBusiness] = useState<Business | null>(null);
+
   useEffect(() => {
     if (!id) return;
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
     getDoc(doc(db, 'businesses', id)).then(snap => {
       if (snap.exists()) setBusiness({ id: snap.id, ...snap.data() } as Business);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!business?.relatedBusinessId) { setRelatedBusiness(null); return; }
+    getDoc(doc(db, 'businesses', business.relatedBusinessId)).then(snap => {
+      setRelatedBusiness(snap.exists() ? { id: snap.id, ...snap.data() } as Business : null);
+    });
+  }, [business?.relatedBusinessId]);
 
   // Real-time reviews
   useEffect(() => {
@@ -450,7 +462,7 @@ export default function BusinessDetailScreen() {
         colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
         style={{ flex: 1 }}
       >
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} style={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* PINNED BANNER */}
         {business.pinned && (
@@ -616,6 +628,24 @@ export default function BusinessDetailScreen() {
             <SectionHeader icon="document-text-outline" color={Colors.primary} title={t('À propos')} theme={theme} />
             <Text style={[styles.description, { color: theme.textSecondary }]}>{business.description}</Text>
           </View>
+
+          {/* VOIR AUSSI — links to a related listing (e.g. a second branch/location) */}
+          {relatedBusiness && (
+            <TouchableOpacity
+              style={[styles.relatedCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+              onPress={() => router.push(`/business/${relatedBusiness.id}`)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.relatedIcon, { backgroundColor: Colors.primary + '22' }]}>
+                <Ionicons name="business-outline" size={18} color={Colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.relatedLabel, { color: theme.textSecondary }]}>{t('Voir aussi')}</Text>
+                <Text style={[styles.relatedName, { color: theme.text }]} numberOfLines={1}>{relatedBusiness.name}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
+            </TouchableOpacity>
+          )}
 
           {/* CONTACT BUTTONS */}
           <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
@@ -1012,6 +1042,10 @@ const styles = StyleSheet.create({
   },
   actionBtnText: { fontSize: 14, fontWeight: '400', color: '#fff' },
   infoCard: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14 },
+  relatedCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 8, borderWidth: 1, padding: 14 },
+  relatedIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  relatedLabel: { fontSize: 11, marginBottom: 2 },
+  relatedName: { fontSize: 14, fontWeight: '400' },
   reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   addReviewBtn: { backgroundColor: Colors.headerGradient[0], paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
   addReviewBtnText: { color: '#fff', fontSize: 13, fontWeight: '400' },

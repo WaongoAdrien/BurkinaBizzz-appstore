@@ -114,6 +114,9 @@ registerTranslations({
   'Page Facebook': 'Facebook page',
   'Site web': 'Website',
   'Image (URL)': 'Image (URL)',
+  'Lier à une autre entreprise': 'Link to another business',
+  'Affiche un lien "Voir aussi" vers cette autre fiche sur la page de': 'Shows a "See also" link to this other listing on the page for',
+  'Actuellement lié à :': 'Currently linked to:',
   'Photos supplémentaires (URLs séparées par une virgule)': 'Additional photos (comma-separated URLs)',
   'Horaires': 'Opening hours',
   'Ex : Lun-Ven 8h-18h, Sam 9h-13h': 'E.g.: Mon-Fri 8am-6pm, Sat 9am-1pm',
@@ -251,6 +254,10 @@ export default function AdminScreen() {
   const confirmDialog = (title: string, message: string, confirmText: string, cancelText: string, onConfirm: () => void) => {
     setConfirmModal({ visible: true, title, message, confirmText, cancelText, onConfirm });
   };
+
+  // Links a business to another listing (e.g. a second branch), shown as a
+  // "Voir aussi" card on the business detail page.
+  const [linkModal, setLinkModal] = useState<{ visible: boolean; item: any | null; search: string }>({ visible: false, item: null, search: '' });
 
   useEffect(() => {
     if (authLoading) return;
@@ -649,6 +656,12 @@ export default function AdminScreen() {
           onPress={() => setPriorityModal({ visible: true, item, value: String(item.priority || 0), collection: 'businesses' })}
         >
           <MaterialIcons name="star" size={16} color={Colors.cta} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.quickActionBtn, { backgroundColor: item.relatedBusinessId ? Colors.primary : 'transparent', borderColor: Colors.primary }]}
+          onPress={() => setLinkModal({ visible: true, item, search: '' })}
+        >
+          <MaterialIcons name="link" size={16} color={item.relatedBusinessId ? '#fff' : Colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.editAdminBtn, { borderColor: Colors.cta, backgroundColor: Colors.cta + '22' }]}
@@ -1399,6 +1412,78 @@ export default function AdminScreen() {
         </View>
       </Modal>
 
+      {/* LINK BUSINESS MODAL — set/clear relatedBusinessId, shown as "Voir aussi" on the detail page */}
+      <Modal
+        visible={linkModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLinkModal({ visible: false, item: null, search: '' })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '75%' }]}>
+            <View style={styles.modalTitleRow}>
+              <MaterialIcons name="link" size={18} color={Colors.primary} />
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t('Lier à une autre entreprise')}</Text>
+            </View>
+            <Text style={[styles.modalSub, { color: theme.textSecondary }]}>
+              {t('Affiche un lien "Voir aussi" vers cette autre fiche sur la page de')} {linkModal.item?.name}
+            </Text>
+
+            {linkModal.item?.relatedBusinessId && (
+              <View style={styles.linkedRow}>
+                <MaterialIcons name="check-circle" size={16} color={Colors.primary} />
+                <Text style={[styles.linkedText, { color: theme.text, flex: 1 }]} numberOfLines={1}>
+                  {t('Actuellement lié à :')} {approvedBiz.find(b => b.id === linkModal.item.relatedBusinessId)?.name || linkModal.item.relatedBusinessId}
+                </Text>
+                <TouchableOpacity
+                  onPress={async () => {
+                    await updateDoc(doc(db, 'businesses', linkModal.item.id), { relatedBusinessId: null });
+                    setLinkModal({ visible: false, item: null, search: '' });
+                  }}
+                >
+                  <MaterialIcons name="close" size={18} color={theme.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TextInput
+              style={[styles.modalInput, { borderColor: '#9CA3AF', color: theme.text, backgroundColor: '#fff' }]}
+              value={linkModal.search}
+              onChangeText={v => setLinkModal(prev => ({ ...prev, search: v }))}
+              placeholder={t('Rechercher une entreprise...')}
+              placeholderTextColor={theme.textSecondary}
+            />
+
+            <ScrollView style={{ marginTop: 10 }}>
+              {approvedBiz
+                .filter(b => b.id !== linkModal.item?.id)
+                .filter(b => !linkModal.search.trim() || b.name.toLowerCase().includes(linkModal.search.trim().toLowerCase()))
+                .slice(0, 12)
+                .map(b => (
+                  <TouchableOpacity
+                    key={b.id}
+                    style={[styles.linkResultRow, { borderColor: theme.border }]}
+                    onPress={async () => {
+                      await updateDoc(doc(db, 'businesses', linkModal.item.id), { relatedBusinessId: b.id });
+                      setLinkModal({ visible: false, item: null, search: '' });
+                    }}
+                  >
+                    <Text style={[styles.linkResultName, { color: theme.text }]} numberOfLines={1}>{b.name}</Text>
+                    <Text style={[styles.linkResultMeta, { color: theme.textSecondary }]}>{b.city}</Text>
+                  </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.modalBtn, { borderColor: theme.border, marginTop: 12 }]}
+              onPress={() => setLinkModal({ visible: false, item: null, search: '' })}
+            >
+              <Text style={[styles.modalBtnText, { color: theme.textSecondary }]}>{t('Annuler')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* GENERIC CONFIRM MODAL — cross-platform stand-in for Alert.alert's two-button confirm.
           Rendered after the add/edit modal so it stacks visually on top of it. */}
       <Modal
@@ -1462,6 +1547,11 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: '400' },
   modalSub: { fontSize: 13, lineHeight: 18, marginBottom: 16 },
   modalInput: { borderWidth: 2, borderRadius: 6, paddingHorizontal: 14, paddingVertical: 12, fontSize: 22, fontWeight: '400', textAlign: 'center', marginBottom: 20 },
+  linkedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F0F7F4', borderRadius: 6, padding: 10, marginBottom: 12 },
+  linkedText: { fontSize: 13, fontWeight: '400' },
+  linkResultRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, paddingVertical: 10, gap: 8 },
+  linkResultName: { fontSize: 14, fontWeight: '400', flex: 1 },
+  linkResultMeta: { fontSize: 12 },
   modalBtns: { flexDirection: 'row', gap: 12, marginTop: 8 },
   modalBtn: { flex: 1, paddingVertical: 13, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   modalBtnText: { fontSize: 15, fontWeight: '400' },

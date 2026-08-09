@@ -29,6 +29,7 @@ export interface Business {
   pinned?: boolean;        // admin pin to top
   priority?: number;       // NEW: manual ordering (0-100, higher = appears first)
     verified?: boolean;  // NEW: admin verified status
+  relatedBusinessId?: string; // NEW: links to another business listing (e.g. a second branch/location)
 }
 
 export interface User {
