@@ -27,7 +27,7 @@ registerTranslations({
   "Essayez une autre recherche ou un autre filtre.": 'Try a different search or filter.',
 });
 
-const HERO_IMAGE = require('../assets/tourism.png');
+const HERO_IMAGE = require('../assets/images/burkinab2.jpeg');
 const EVENTS_CTA_IMAGE = require('../assets/imageindex.png');
 
 export const normalizeUrl = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`);

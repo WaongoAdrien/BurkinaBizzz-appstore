@@ -69,6 +69,18 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // ── USEFUL NUMBERS (About Burkina) ──────────────────────────────────
+    match /usefulNumbers/{numberId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── OFFICIAL GOVERNMENT SITES (About Burkina) ───────────────────────
+    match /officialSites/{siteId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     // ── REPORTS ──────────────────────────────────────────────────────────
     match /reports/{reportId} {
       // Only admins can view the moderation queue

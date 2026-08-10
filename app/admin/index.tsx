@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import {
   collection, query, where, orderBy, onSnapshot,
   doc, addDoc, updateDoc, deleteDoc, serverTimestamp,
@@ -130,10 +130,35 @@ registerTranslations({
   'Optionnel — https://facebook.com/...': 'Optional — https://facebook.com/...',
   'Optionnel — https://...': 'Optional — https://...',
   'Enregistrer': 'Save',
+  'Informations': 'Information',
+  'Numéros utiles': 'Useful numbers',
+  'Sites officiels': 'Official sites',
+  'Ajouter un numéro': 'Add a number',
+  'Ajouter un site officiel': 'Add an official site',
+  'Aucun numéro utile': 'No useful numbers',
+  'Aucun site officiel': 'No official sites',
+  'un numéro utile': 'a useful number',
+  'un site officiel': 'an official site',
+  'Libellé *': 'Label *',
+  'Numéro de téléphone *': 'Phone number *',
+  'Groupe *': 'Group *',
+  "Ex : Urgences, Hôpitaux et cliniques...": 'E.g.: Emergencies, Hospitals and clinics...',
+  'Icône (Ionicons)': 'Icon (Ionicons)',
+  'Ex : shield-checkmark-outline': 'E.g.: shield-checkmark-outline',
+  'Site web *': 'Website *',
+  'Ordre (optionnel)': 'Order (optional)',
+  'Plus petit = apparaît en premier': 'Lower = appears first',
+  'Le libellé et le numéro sont requis.': 'Label and number are required.',
+  'Le nom est requis.': 'Name is required.',
+  'Supprimer ce numéro?': 'Delete this number?',
+  'Supprimer ce site?': 'Delete this site?',
+  'Ex : Police Secours': 'E.g.: Police Emergency',
+  'Ex : Présidence du Faso': 'E.g.: Présidence du Faso',
 });
 
-type Tab = 'businesses' | 'users' | 'reports' | 'events' | 'attractions';
+type Tab = 'businesses' | 'users' | 'reports' | 'events' | 'attractions' | 'info';
 type ContentKind = 'events' | 'attractions';
+type InfoSubTab = 'numbers' | 'sites';
 
 const CONTENT_COLLECTION: Record<ContentKind, string> = {
   events: 'events',
@@ -165,6 +190,34 @@ const emptyContentForm = (kind: ContentKind): ContentFormState => ({
   name: '', category: '', location: '', phone: '', image: '', photos: '', schedule: '', date: '', description: '',
   mapLink: '', facebook: '', website: '',
   latitude: null, longitude: null,
+});
+
+// ── Useful numbers & official sites (About Burkina) ─────────────────────────
+interface NumberFormState {
+  visible: boolean;
+  editId: string | null;
+  label: string;
+  number: string;
+  group: string;
+  icon: string;
+  order: string;
+}
+const emptyNumberForm = (): NumberFormState => ({
+  visible: true, editId: null, label: '', number: '', group: '', icon: 'call-outline', order: '',
+});
+
+interface SiteFormState {
+  visible: boolean;
+  editId: string | null;
+  name: string;
+  website: string;
+  facebook: string;
+  description: string;
+  icon: string;
+  order: string;
+}
+const emptySiteForm = (): SiteFormState => ({
+  visible: true, editId: null, name: '', website: '', facebook: '', description: '', icon: 'business-outline', order: '',
 });
 
 // ── Duplicate detection ─────────────────────────────────────────────────────
@@ -232,6 +285,14 @@ export default function AdminScreen() {
   const [contentForm, setContentForm] = useState<ContentFormState>({ ...emptyContentForm('events'), visible: false });
   const [savingContent, setSavingContent] = useState(false);
   const [locationPickerVisible, setLocationPickerVisible] = useState(false);
+
+  // Useful numbers & official sites (About Burkina)
+  const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('numbers');
+  const [usefulNumbers, setUsefulNumbers] = useState<any[]>([]);
+  const [officialSites, setOfficialSites] = useState<any[]>([]);
+  const [numberForm, setNumberForm] = useState<NumberFormState>({ ...emptyNumberForm(), visible: false });
+  const [siteForm, setSiteForm] = useState<SiteFormState>({ ...emptySiteForm(), visible: false });
+  const [savingInfo, setSavingInfo] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -310,7 +371,17 @@ export default function AdminScreen() {
       snap => setAttractions(snap.docs.map(d => ({ id: d.id, ...d.data() })))
     );
 
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
+    // ── Useful numbers & official sites ─────────────────────────────────
+    const u8 = onSnapshot(
+      query(collection(db, 'usefulNumbers'), orderBy('order', 'asc')),
+      snap => setUsefulNumbers(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+    const u9 = onSnapshot(
+      query(collection(db, 'officialSites'), orderBy('order', 'asc')),
+      snap => setOfficialSites(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); u8(); u9(); };
   }, [isAdmin]);
 
   // ── Events & attractions actions ────────────────────────────────────────
@@ -404,6 +475,109 @@ export default function AdminScreen() {
           setActionId(item.id);
           try {
             await deleteDoc(doc(db, collectionName, item.id));
+          } catch {
+            Alert.alert(t('Erreur'), t('Impossible de supprimer.'));
+          } finally { setActionId(null); }
+        },
+      },
+    ]);
+  };
+
+  // ── Useful numbers actions ──────────────────────────────────────────────
+  const openAddNumber = () => setNumberForm(emptyNumberForm());
+  const openEditNumber = (item: any) => setNumberForm({
+    visible: true, editId: item.id,
+    label: item.label || '', number: item.number || '', group: item.group || '',
+    icon: item.icon || 'call-outline', order: typeof item.order === 'number' ? String(item.order) : '',
+  });
+  const closeNumberForm = () => setNumberForm(prev => ({ ...prev, visible: false }));
+
+  const saveNumber = async () => {
+    const { editId, label, number, group, icon, order } = numberForm;
+    if (!label.trim() || !number.trim() || !group.trim()) {
+      Alert.alert(t('Erreur'), t('Le libellé et le numéro sont requis.'));
+      return;
+    }
+    const payload: any = {
+      label: label.trim(), number: number.trim(), group: group.trim(),
+      icon: icon.trim() || 'call-outline', order: parseInt(order) || 0,
+    };
+    setSavingInfo(true);
+    try {
+      if (editId) {
+        await updateDoc(doc(db, 'usefulNumbers', editId), payload);
+      } else {
+        await addDoc(collection(db, 'usefulNumbers'), { ...payload, createdAt: serverTimestamp() });
+      }
+      closeNumberForm();
+    } catch (e: any) {
+      Alert.alert(t('Erreur'), e?.message || t("Impossible d'enregistrer."));
+    } finally {
+      setSavingInfo(false);
+    }
+  };
+
+  const deleteNumber = (item: any) => {
+    Alert.alert(t('Supprimer ce numéro?'), `"${item.label}"${t(' sera supprimé définitivement.')}`, [
+      { text: t('Annuler'), style: 'cancel' },
+      {
+        text: t('Supprimer'), style: 'destructive', onPress: async () => {
+          setActionId(item.id);
+          try {
+            await deleteDoc(doc(db, 'usefulNumbers', item.id));
+          } catch {
+            Alert.alert(t('Erreur'), t('Impossible de supprimer.'));
+          } finally { setActionId(null); }
+        },
+      },
+    ]);
+  };
+
+  // ── Official sites actions ──────────────────────────────────────────────
+  const openAddSite = () => setSiteForm(emptySiteForm());
+  const openEditSite = (item: any) => setSiteForm({
+    visible: true, editId: item.id,
+    name: item.name || '', website: item.website || '', facebook: item.facebook || '',
+    description: item.description || '', icon: item.icon || 'business-outline',
+    order: typeof item.order === 'number' ? String(item.order) : '',
+  });
+  const closeSiteForm = () => setSiteForm(prev => ({ ...prev, visible: false }));
+
+  const saveSite = async () => {
+    const { editId, name, website, facebook, description, icon, order } = siteForm;
+    if (!name.trim()) {
+      Alert.alert(t('Erreur'), t('Le nom est requis.'));
+      return;
+    }
+    const payload: any = {
+      name: name.trim(), description: description.trim(),
+      icon: icon.trim() || 'business-outline', order: parseInt(order) || 0,
+    };
+    if (website.trim()) payload.website = website.trim();
+    if (facebook.trim()) payload.facebook = facebook.trim();
+    setSavingInfo(true);
+    try {
+      if (editId) {
+        await updateDoc(doc(db, 'officialSites', editId), payload);
+      } else {
+        await addDoc(collection(db, 'officialSites'), { ...payload, createdAt: serverTimestamp() });
+      }
+      closeSiteForm();
+    } catch (e: any) {
+      Alert.alert(t('Erreur'), e?.message || t("Impossible d'enregistrer."));
+    } finally {
+      setSavingInfo(false);
+    }
+  };
+
+  const deleteSite = (item: any) => {
+    Alert.alert(t('Supprimer ce site?'), `"${item.name}"${t(' sera supprimé définitivement.')}`, [
+      { text: t('Annuler'), style: 'cancel' },
+      {
+        text: t('Supprimer'), style: 'destructive', onPress: async () => {
+          setActionId(item.id);
+          try {
+            await deleteDoc(doc(db, 'officialSites', item.id));
           } catch {
             Alert.alert(t('Erreur'), t('Impossible de supprimer.'));
           } finally { setActionId(null); }
@@ -852,6 +1026,93 @@ export default function AdminScreen() {
     );
   };
 
+  const renderNumberItem = ({ item }: { item: any }) => (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.cardTop}>
+        <View style={[styles.avatar, { backgroundColor: Colors.primary + '33' }]}>
+          <Ionicons name={(item.icon || 'call-outline') as any} size={20} color={Colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.label}</Text>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="phone" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.number}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="folder" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.group}</Text>
+          </View>
+        </View>
+      </View>
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={[styles.editAdminBtn, { borderColor: Colors.cta, backgroundColor: Colors.cta + '22' }]}
+          onPress={() => openEditNumber(item)}
+        >
+          <MaterialIcons name="edit" size={14} color={Colors.cta} />
+          <Text style={[styles.editAdminText, { color: Colors.cta }]}>{t('Modifier')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.rejectBtn}
+          onPress={() => deleteNumber(item)}
+          disabled={actionId === item.id}
+        >
+          {actionId === item.id
+            ? <ActivityIndicator size="small" color="#D32F2F" />
+            : <><MaterialIcons name="delete-outline" size={14} color="#D32F2F" /><Text style={styles.rejectText}>{t('Supprimer')}</Text></>
+          }
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderSiteItem = ({ item }: { item: any }) => (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.cardTop}>
+        <View style={[styles.avatar, { backgroundColor: Colors.primary + '33' }]}>
+          <Ionicons name={(item.icon || 'business-outline') as any} size={20} color={Colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+          {item.website ? (
+            <View style={styles.metaRow}>
+              <MaterialIcons name="language" size={12} color={theme.textSecondary} />
+              <Text style={[styles.meta, { color: theme.textSecondary }]} numberOfLines={1}>{item.website}</Text>
+            </View>
+          ) : null}
+          {item.facebook ? (
+            <View style={styles.metaRow}>
+              <MaterialIcons name="facebook" size={12} color={theme.textSecondary} />
+              <Text style={[styles.meta, { color: theme.textSecondary }]} numberOfLines={1}>{item.facebook}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+      {item.description ? (
+        <Text style={[styles.desc, { color: theme.textSecondary }]} numberOfLines={2}>{item.description}</Text>
+      ) : null}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={[styles.editAdminBtn, { borderColor: Colors.cta, backgroundColor: Colors.cta + '22' }]}
+          onPress={() => openEditSite(item)}
+        >
+          <MaterialIcons name="edit" size={14} color={Colors.cta} />
+          <Text style={[styles.editAdminText, { color: Colors.cta }]}>{t('Modifier')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.rejectBtn}
+          onPress={() => deleteSite(item)}
+          disabled={actionId === item.id}
+        >
+          {actionId === item.id
+            ? <ActivityIndicator size="small" color="#D32F2F" />
+            : <><MaterialIcons name="delete-outline" size={14} color="#D32F2F" /><Text style={styles.rejectText}>{t('Supprimer')}</Text></>
+          }
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   if (authLoading) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} size="large" />;
   if (!isAdmin) return null;
 
@@ -952,6 +1213,17 @@ export default function AdminScreen() {
             <MaterialIcons name="photo-camera" size={16} color={tab === 'attractions' ? '#B3492F' : theme.textSecondary} />
             <Text style={[styles.mainTabText, { color: tab === 'attractions' ? '#B3492F' : theme.textSecondary }]}>
               {t('Sites touristiques')} {attractions.length > 0 ? `(${attractions.length})` : ''}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.mainTabBtn, tab === 'info' && { borderBottomColor: '#2E7D8F', borderBottomWidth: 2.5 }]}
+          onPress={() => setTab('info')}
+        >
+          <View style={styles.tabInner}>
+            <MaterialIcons name="info" size={16} color={tab === 'info' ? '#2E7D8F' : theme.textSecondary} />
+            <Text style={[styles.mainTabText, { color: tab === 'info' ? '#2E7D8F' : theme.textSecondary }]}>
+              {t('Informations')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -1175,6 +1447,68 @@ export default function AdminScreen() {
               </View>
             }
           />
+        </>
+      )}
+
+      {!loading && tab === 'info' && (
+        <>
+          <View style={[styles.subTabRow, { backgroundColor: theme.surface }]}>
+            {(['numbers', 'sites'] as const).map(st => (
+              <TouchableOpacity key={st}
+                style={[styles.subTabBtn, infoSubTab === st && { backgroundColor: Colors.primary }]}
+                onPress={() => setInfoSubTab(st)}>
+                <Text style={[styles.subTabText, { color: infoSubTab === st ? '#fff' : theme.textSecondary }]}>
+                  {st === 'numbers' ? `${t('Numéros utiles')} (${usefulNumbers.length})` : `${t('Sites officiels')} (${officialSites.length})`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {infoSubTab === 'numbers' ? (
+            <>
+              <TouchableOpacity style={styles.addContentBtn} onPress={openAddNumber} activeOpacity={0.85}>
+                <MaterialIcons name="add" size={18} color="#1A1A1A" />
+                <Text style={styles.addContentBtnText}>{t('Ajouter un numéro')}</Text>
+              </TouchableOpacity>
+              <FlatList
+                data={usefulNumbers}
+                keyExtractor={item => item.id}
+                renderItem={renderNumberItem}
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(true)} tintColor={Colors.primary} colors={[Colors.primary]} />}
+                ListEmptyComponent={
+                  <View style={styles.empty}>
+                    <MaterialIcons name="call" size={48} color={theme.textSecondary} />
+                    <Text style={[styles.emptyText, { color: theme.text }]}>{t('Aucun numéro utile')}</Text>
+                  </View>
+                }
+              />
+            </>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.addContentBtn} onPress={openAddSite} activeOpacity={0.85}>
+                <MaterialIcons name="add" size={18} color="#1A1A1A" />
+                <Text style={styles.addContentBtnText}>{t('Ajouter un site officiel')}</Text>
+              </TouchableOpacity>
+              <FlatList
+                data={officialSites}
+                keyExtractor={item => item.id}
+                renderItem={renderSiteItem}
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(true)} tintColor={Colors.primary} colors={[Colors.primary]} />}
+                ListEmptyComponent={
+                  <View style={styles.empty}>
+                    <MaterialIcons name="account-balance" size={48} color={theme.textSecondary} />
+                    <Text style={[styles.emptyText, { color: theme.text }]}>{t('Aucun site officiel')}</Text>
+                  </View>
+                }
+              />
+            </>
+          )}
         </>
       )}
 
@@ -1403,6 +1737,185 @@ export default function AdminScreen() {
                 disabled={savingContent}
               >
                 {savingContent
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={[styles.modalBtnText, { color: '#fff', fontWeight: '400' }]}>{t('Enregistrer')}</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ADD/EDIT USEFUL NUMBER MODAL */}
+      <Modal
+        visible={numberForm.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeNumberForm}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%' }]}>
+            <View style={styles.modalTitleRow}>
+              <Ionicons name={(numberForm.icon || 'call-outline') as any} size={18} color={Colors.primary} />
+              <Text style={[styles.modalTitle, { color: theme.text }]}>
+                {numberForm.editId ? t('Modifier') : t('Ajouter')} {t('un numéro utile')}
+              </Text>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Libellé *')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={numberForm.label}
+                onChangeText={v => setNumberForm(prev => ({ ...prev, label: v }))}
+                placeholder={t('Ex : Police Secours')}
+                placeholderTextColor={theme.textSecondary}
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Numéro de téléphone *')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={numberForm.number}
+                onChangeText={v => setNumberForm(prev => ({ ...prev, number: v }))}
+                placeholder="17"
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="phone-pad"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Groupe *')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={numberForm.group}
+                onChangeText={v => setNumberForm(prev => ({ ...prev, group: v }))}
+                placeholder={t("Ex : Urgences, Hôpitaux et cliniques...")}
+                placeholderTextColor={theme.textSecondary}
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Icône (Ionicons)')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={numberForm.icon}
+                onChangeText={v => setNumberForm(prev => ({ ...prev, icon: v }))}
+                placeholder={t('Ex : shield-checkmark-outline')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Ordre (optionnel)')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={numberForm.order}
+                onChangeText={v => setNumberForm(prev => ({ ...prev, order: v.replace(/[^0-9]/g, '') }))}
+                placeholder={t('Plus petit = apparaît en premier')}
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="number-pad"
+              />
+            </ScrollView>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { borderColor: theme.border }]}
+                onPress={closeNumberForm}
+                disabled={savingInfo}
+              >
+                <Text style={[styles.modalBtnText, { color: theme.textSecondary }]}>{t('Annuler')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
+                onPress={saveNumber}
+                disabled={savingInfo}
+              >
+                {savingInfo
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={[styles.modalBtnText, { color: '#fff', fontWeight: '400' }]}>{t('Enregistrer')}</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ADD/EDIT OFFICIAL SITE MODAL */}
+      <Modal
+        visible={siteForm.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeSiteForm}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%' }]}>
+            <View style={styles.modalTitleRow}>
+              <Ionicons name={(siteForm.icon || 'business-outline') as any} size={18} color={Colors.primary} />
+              <Text style={[styles.modalTitle, { color: theme.text }]}>
+                {siteForm.editId ? t('Modifier') : t('Ajouter')} {t('un site officiel')}
+              </Text>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Nom *')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={siteForm.name}
+                onChangeText={v => setSiteForm(prev => ({ ...prev, name: v }))}
+                placeholder={t('Ex : Présidence du Faso')}
+                placeholderTextColor={theme.textSecondary}
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Site web')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={siteForm.website}
+                onChangeText={v => setSiteForm(prev => ({ ...prev, website: v }))}
+                placeholder={t('Optionnel — https://...')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Page Facebook')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={siteForm.facebook}
+                onChangeText={v => setSiteForm(prev => ({ ...prev, facebook: v }))}
+                placeholder={t('Optionnel — https://facebook.com/...')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Icône (Ionicons)')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={siteForm.icon}
+                onChangeText={v => setSiteForm(prev => ({ ...prev, icon: v }))}
+                placeholder={t('Ex : business-outline')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Ordre (optionnel)')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={siteForm.order}
+                onChangeText={v => setSiteForm(prev => ({ ...prev, order: v.replace(/[^0-9]/g, '') }))}
+                placeholder={t('Plus petit = apparaît en premier')}
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="number-pad"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Description')}</Text>
+              <TextInput
+                style={[styles.fieldInput, styles.fieldInputMultiline, { borderColor: theme.border, color: theme.text }]}
+                value={siteForm.description}
+                onChangeText={v => setSiteForm(prev => ({ ...prev, description: v }))}
+                placeholder={t('Description')}
+                placeholderTextColor={theme.textSecondary}
+                multiline
+                numberOfLines={4}
+              />
+            </ScrollView>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { borderColor: theme.border }]}
+                onPress={closeSiteForm}
+                disabled={savingInfo}
+              >
+                <Text style={[styles.modalBtnText, { color: theme.textSecondary }]}>{t('Annuler')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
+                onPress={saveSite}
+                disabled={savingInfo}
+              >
+                {savingInfo
                   ? <ActivityIndicator size="small" color="#fff" />
                   : <Text style={[styles.modalBtnText, { color: '#fff', fontWeight: '400' }]}>{t('Enregistrer')}</Text>
                 }
