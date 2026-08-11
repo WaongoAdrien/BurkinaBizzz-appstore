@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Image, Share,
-  StyleSheet, Linking, ActivityIndicator, Dimensions,
+  StyleSheet, Linking, ActivityIndicator, Dimensions, Modal, StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
@@ -37,6 +37,7 @@ export default function EventDetailScreen() {
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [editVisible, setEditVisible] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -91,7 +92,9 @@ export default function EventDetailScreen() {
             <Ionicons name="share-outline" size={18} color="#fff" />
           </TouchableOpacity>
           {event.image ? (
-            <Image source={{ uri: event.image }} style={[styles.photo, { width }]} resizeMode="cover" />
+            <TouchableOpacity activeOpacity={0.9} onPress={() => setShowImageViewer(true)}>
+              <Image source={{ uri: event.image }} style={[styles.photo, { width }]} resizeMode="cover" />
+            </TouchableOpacity>
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder, { width, backgroundColor: Colors.primary + '22' }]}>
               <Ionicons name="calendar-outline" size={72} color={Colors.primary} />
@@ -201,6 +204,33 @@ export default function EventDetailScreen() {
           onSaved={(updated) => setEvent(prev => prev ? { ...prev, ...updated } as EventItem : prev)}
         />
       )}
+
+      {/* FULL-SCREEN IMAGE VIEWER */}
+      {event.image && (
+        <Modal
+          visible={showImageViewer}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowImageViewer(false)}
+        >
+          <View style={styles.imageViewerContainer}>
+            <StatusBar barStyle="light-content" backgroundColor="#000" />
+
+            <TouchableOpacity
+              style={styles.imageViewerClose}
+              onPress={() => setShowImageViewer(false)}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+
+            <Image
+              source={{ uri: event.image }}
+              style={styles.imageViewerPhoto}
+              resizeMode="contain"
+            />
+          </View>
+        </Modal>
+      )}
     </>
   );
 }
@@ -233,4 +263,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13, paddingHorizontal: 16, borderRadius: 7, flexGrow: 1,
   },
   actionBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
+  imageViewerContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
+  imageViewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  imageViewerPhoto: { width: '100%', height: '100%' },
 });

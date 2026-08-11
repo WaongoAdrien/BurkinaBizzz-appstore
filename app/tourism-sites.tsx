@@ -49,6 +49,7 @@ export interface Attraction {
   priority?: number;
   latitude?: number;
   longitude?: number;
+  hotels?: { name: string; url: string }[];
 }
 
 

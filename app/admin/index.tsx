@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, TextInput,
+  View, Text, FlatList, TouchableOpacity, TextInput, Image,
   StyleSheet, Alert, ActivityIndicator, Modal,
   SafeAreaView, RefreshControl, ScrollView,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,6 +24,25 @@ import LocationPicker from '../../components/Locationpicker';
 registerTranslations({
   'Position GPS (pour la carte)': 'GPS position (for the map)',
   'Optionnel — choisir sur la carte': 'Optional — pick on the map',
+  'Hôtels recommandés à proximité': 'Recommended hotels nearby',
+  "Aidez les visiteurs à trouver où dormir près de ce site.": 'Help visitors find where to stay near this site.',
+  "Aucun hôtel ajouté pour l'instant.": 'No hotels added yet.',
+  "Nom de l'hôtel": 'Hotel name',
+  'Ajouter un hôtel': 'Add a hotel',
+  'Chaque hôtel doit avoir un nom et un lien.': 'Each hotel needs both a name and a link.',
+  'Applications utiles': 'Useful applications',
+  'Ajouter une application': 'Add an application',
+  'Aucune application': 'No applications',
+  'une application': 'an application',
+  'Le nom et la catégorie sont requis.': 'Name and category are required.',
+  'Supprimer cette application?': 'Delete this application?',
+  'Ex : Orange Money, Wave, Yango...': 'E.g.: Orange Money, Wave, Yango...',
+  'Ex : Paiement mobile, Transport, Services publics...': 'E.g.: Mobile payment, Transport, Public services...',
+  "Icône / logo (URL)": 'Icon / logo (URL)',
+  'Lien Google Play': 'Google Play link',
+  'Optionnel — https://play.google.com/...': 'Optional — https://play.google.com/...',
+  'Lien App Store': 'App Store link',
+  'Optionnel — https://apps.apple.com/...': 'Optional — https://apps.apple.com/...',
   'Erreur': 'Error',
   'Le nom, la catégorie et le lieu sont requis.': 'Name, category and location are required.',
   "Impossible d'enregistrer.": 'Unable to save.',
@@ -158,12 +178,17 @@ registerTranslations({
 
 type Tab = 'businesses' | 'users' | 'reports' | 'events' | 'attractions' | 'info';
 type ContentKind = 'events' | 'attractions';
-type InfoSubTab = 'numbers' | 'sites';
+type InfoSubTab = 'numbers' | 'sites' | 'apps';
 
 const CONTENT_COLLECTION: Record<ContentKind, string> = {
   events: 'events',
   attractions: 'touristSites',
 };
+
+interface HotelLink {
+  name: string;
+  url: string;
+}
 
 interface ContentFormState {
   visible: boolean;
@@ -183,6 +208,7 @@ interface ContentFormState {
   website: string;
   latitude: number | null;
   longitude: number | null;
+  hotels: HotelLink[];
 }
 
 const emptyContentForm = (kind: ContentKind): ContentFormState => ({
@@ -190,6 +216,7 @@ const emptyContentForm = (kind: ContentKind): ContentFormState => ({
   name: '', category: '', location: '', phone: '', image: '', photos: '', schedule: '', date: '', description: '',
   mapLink: '', facebook: '', website: '',
   latitude: null, longitude: null,
+  hotels: [],
 });
 
 // ── Useful numbers & official sites (About Burkina) ─────────────────────────
@@ -218,6 +245,24 @@ interface SiteFormState {
 }
 const emptySiteForm = (): SiteFormState => ({
   visible: true, editId: null, name: '', website: '', facebook: '', description: '', icon: 'business-outline', order: '',
+});
+
+// ── Useful applications ──────────────────────────────────────────────────
+interface AppFormState {
+  visible: boolean;
+  editId: string | null;
+  name: string;
+  category: string;
+  description: string;
+  image: string;
+  androidUrl: string;
+  iosUrl: string;
+  website: string;
+  order: string;
+}
+const emptyAppForm = (): AppFormState => ({
+  visible: true, editId: null, name: '', category: '', description: '', image: '',
+  androidUrl: '', iosUrl: '', website: '', order: '',
 });
 
 // ── Duplicate detection ─────────────────────────────────────────────────────
@@ -290,8 +335,10 @@ export default function AdminScreen() {
   const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('numbers');
   const [usefulNumbers, setUsefulNumbers] = useState<any[]>([]);
   const [officialSites, setOfficialSites] = useState<any[]>([]);
+  const [usefulApps, setUsefulApps] = useState<any[]>([]);
   const [numberForm, setNumberForm] = useState<NumberFormState>({ ...emptyNumberForm(), visible: false });
   const [siteForm, setSiteForm] = useState<SiteFormState>({ ...emptySiteForm(), visible: false });
+  const [appForm, setAppForm] = useState<AppFormState>({ ...emptyAppForm(), visible: false });
   const [savingInfo, setSavingInfo] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -380,8 +427,12 @@ export default function AdminScreen() {
       query(collection(db, 'officialSites'), orderBy('order', 'asc')),
       snap => setOfficialSites(snap.docs.map(d => ({ id: d.id, ...d.data() })))
     );
+    const u10 = onSnapshot(
+      query(collection(db, 'usefulApps'), orderBy('order', 'asc')),
+      snap => setUsefulApps(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
 
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); u8(); u9(); };
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); u8(); u9(); u10(); };
   }, [isAdmin]);
 
   // ── Events & attractions actions ────────────────────────────────────────
@@ -397,6 +448,7 @@ export default function AdminScreen() {
     mapLink: item.mapLink || '', facebook: item.facebook || '', website: item.website || '',
     latitude: typeof item.latitude === 'number' ? item.latitude : null,
     longitude: typeof item.longitude === 'number' ? item.longitude : null,
+    hotels: Array.isArray(item.hotels) ? item.hotels.map((h: any) => ({ name: h?.name || '', url: h?.url || '' })) : [],
   });
 
   const closeContentForm = () => setContentForm(prev => ({ ...prev, visible: false }));
@@ -405,6 +457,11 @@ export default function AdminScreen() {
     setTab(kind);
     openAddContent(kind);
   };
+
+  const addHotelRow = () => setContentForm(prev => ({ ...prev, hotels: [...prev.hotels, { name: '', url: '' }] }));
+  const removeHotelRow = (idx: number) => setContentForm(prev => ({ ...prev, hotels: prev.hotels.filter((_, i) => i !== idx) }));
+  const updateHotelRow = (idx: number, field: keyof HotelLink, value: string) =>
+    setContentForm(prev => ({ ...prev, hotels: prev.hotels.map((h, i) => (i === idx ? { ...h, [field]: value } : h)) }));
 
   const persistContent = async (collectionName: string, editId: string | null, payload: any) => {
     setSavingContent(true);
@@ -423,9 +480,16 @@ export default function AdminScreen() {
   };
 
   const saveContent = async () => {
-    const { kind, editId, name, category, location, phone, image, photos, schedule, date, description, mapLink, facebook, website, latitude, longitude } = contentForm;
+    const { kind, editId, name, category, location, phone, image, photos, schedule, date, description, mapLink, facebook, website, latitude, longitude, hotels } = contentForm;
     if (!name.trim() || !category.trim() || !location.trim()) {
       Alert.alert(t('Erreur'), t('Le nom, la catégorie et le lieu sont requis.'));
+      return;
+    }
+    const cleanHotels = hotels
+      .map(h => ({ name: h.name.trim(), url: h.url.trim() }))
+      .filter(h => h.name && h.url);
+    if (hotels.some(h => (h.name.trim() && !h.url.trim()) || (!h.name.trim() && h.url.trim()))) {
+      Alert.alert(t('Erreur'), t('Chaque hôtel doit avoir un nom et un lien.'));
       return;
     }
     const collectionName = CONTENT_COLLECTION[kind];
@@ -444,6 +508,7 @@ export default function AdminScreen() {
       payload.latitude = latitude;
       payload.longitude = longitude;
     }
+    if (kind === 'attractions') payload.hotels = cleanHotels;
 
     if (!editId) {
       const existing = kind === 'events' ? events : attractions;
@@ -578,6 +643,61 @@ export default function AdminScreen() {
           setActionId(item.id);
           try {
             await deleteDoc(doc(db, 'officialSites', item.id));
+          } catch {
+            Alert.alert(t('Erreur'), t('Impossible de supprimer.'));
+          } finally { setActionId(null); }
+        },
+      },
+    ]);
+  };
+
+  // ── Useful applications actions ─────────────────────────────────────────
+  const openAddApp = () => setAppForm(emptyAppForm());
+  const openEditApp = (item: any) => setAppForm({
+    visible: true, editId: item.id,
+    name: item.name || '', category: item.category || '', description: item.description || '',
+    image: item.image || '', androidUrl: item.androidUrl || '', iosUrl: item.iosUrl || '', website: item.website || '',
+    order: typeof item.order === 'number' ? String(item.order) : '',
+  });
+  const closeAppForm = () => setAppForm(prev => ({ ...prev, visible: false }));
+
+  const saveApp = async () => {
+    const { editId, name, category, description, image, androidUrl, iosUrl, website, order } = appForm;
+    if (!name.trim() || !category.trim()) {
+      Alert.alert(t('Erreur'), t('Le nom et la catégorie sont requis.'));
+      return;
+    }
+    const payload: any = {
+      name: name.trim(), category: category.trim(), description: description.trim(),
+      order: parseInt(order) || 0,
+    };
+    if (image.trim()) payload.image = image.trim();
+    if (androidUrl.trim()) payload.androidUrl = androidUrl.trim();
+    if (iosUrl.trim()) payload.iosUrl = iosUrl.trim();
+    if (website.trim()) payload.website = website.trim();
+    setSavingInfo(true);
+    try {
+      if (editId) {
+        await updateDoc(doc(db, 'usefulApps', editId), payload);
+      } else {
+        await addDoc(collection(db, 'usefulApps'), { ...payload, createdAt: serverTimestamp() });
+      }
+      closeAppForm();
+    } catch (e: any) {
+      Alert.alert(t('Erreur'), e?.message || t("Impossible d'enregistrer."));
+    } finally {
+      setSavingInfo(false);
+    }
+  };
+
+  const deleteApp = (item: any) => {
+    Alert.alert(t('Supprimer cette application?'), `"${item.name}"${t(' sera supprimée définitivement.')}`, [
+      { text: t('Annuler'), style: 'cancel' },
+      {
+        text: t('Supprimer'), style: 'destructive', onPress: async () => {
+          setActionId(item.id);
+          try {
+            await deleteDoc(doc(db, 'usefulApps', item.id));
           } catch {
             Alert.alert(t('Erreur'), t('Impossible de supprimer.'));
           } finally { setActionId(null); }
@@ -1113,6 +1233,53 @@ export default function AdminScreen() {
     </View>
   );
 
+  const renderAppItem = ({ item }: { item: any }) => (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.cardTop}>
+        <View style={[styles.avatar, { backgroundColor: Colors.primary + '33', overflow: 'hidden' }]}>
+          {item.image ? (
+            <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          ) : (
+            <Ionicons name="apps" size={20} color={Colors.primary} />
+          )}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="category" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.category}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
+            {item.androidUrl ? <Ionicons name="logo-google-playstore" size={13} color={theme.textSecondary} /> : null}
+            {item.iosUrl ? <Ionicons name="logo-apple-appstore" size={13} color={theme.textSecondary} /> : null}
+          </View>
+        </View>
+      </View>
+      {item.description ? (
+        <Text style={[styles.desc, { color: theme.textSecondary }]} numberOfLines={2}>{item.description}</Text>
+      ) : null}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={[styles.editAdminBtn, { borderColor: Colors.cta, backgroundColor: Colors.cta + '22' }]}
+          onPress={() => openEditApp(item)}
+        >
+          <MaterialIcons name="edit" size={14} color={Colors.cta} />
+          <Text style={[styles.editAdminText, { color: Colors.cta }]}>{t('Modifier')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.rejectBtn}
+          onPress={() => deleteApp(item)}
+          disabled={actionId === item.id}
+        >
+          {actionId === item.id
+            ? <ActivityIndicator size="small" color="#D32F2F" />
+            : <><MaterialIcons name="delete-outline" size={14} color="#D32F2F" /><Text style={styles.rejectText}>{t('Supprimer')}</Text></>
+          }
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   if (authLoading) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} size="large" />;
   if (!isAdmin) return null;
 
@@ -1453,12 +1620,12 @@ export default function AdminScreen() {
       {!loading && tab === 'info' && (
         <>
           <View style={[styles.subTabRow, { backgroundColor: theme.surface }]}>
-            {(['numbers', 'sites'] as const).map(st => (
+            {(['numbers', 'sites', 'apps'] as const).map(st => (
               <TouchableOpacity key={st}
                 style={[styles.subTabBtn, infoSubTab === st && { backgroundColor: Colors.primary }]}
                 onPress={() => setInfoSubTab(st)}>
                 <Text style={[styles.subTabText, { color: infoSubTab === st ? '#fff' : theme.textSecondary }]}>
-                  {st === 'numbers' ? `${t('Numéros utiles')} (${usefulNumbers.length})` : `${t('Sites officiels')} (${officialSites.length})`}
+                  {st === 'numbers' ? `${t('Numéros utiles')} (${usefulNumbers.length})` : st === 'sites' ? `${t('Sites officiels')} (${officialSites.length})` : `${t('Applications utiles')} (${usefulApps.length})`}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -1486,7 +1653,7 @@ export default function AdminScreen() {
                 }
               />
             </>
-          ) : (
+          ) : infoSubTab === 'sites' ? (
             <>
               <TouchableOpacity style={styles.addContentBtn} onPress={openAddSite} activeOpacity={0.85}>
                 <MaterialIcons name="add" size={18} color="#1A1A1A" />
@@ -1504,6 +1671,28 @@ export default function AdminScreen() {
                   <View style={styles.empty}>
                     <MaterialIcons name="account-balance" size={48} color={theme.textSecondary} />
                     <Text style={[styles.emptyText, { color: theme.text }]}>{t('Aucun site officiel')}</Text>
+                  </View>
+                }
+              />
+            </>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.addContentBtn} onPress={openAddApp} activeOpacity={0.85}>
+                <MaterialIcons name="add" size={18} color="#1A1A1A" />
+                <Text style={styles.addContentBtnText}>{t('Ajouter une application')}</Text>
+              </TouchableOpacity>
+              <FlatList
+                data={usefulApps}
+                keyExtractor={item => item.id}
+                renderItem={renderAppItem}
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(true)} tintColor={Colors.primary} colors={[Colors.primary]} />}
+                ListEmptyComponent={
+                  <View style={styles.empty}>
+                    <MaterialIcons name="apps" size={48} color={theme.textSecondary} />
+                    <Text style={[styles.emptyText, { color: theme.text }]}>{t('Aucune application')}</Text>
                   </View>
                 }
               />
@@ -1574,8 +1763,9 @@ export default function AdminScreen() {
         animationType="fade"
         onRequestClose={closeContentForm}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%' }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <View style={[styles.modalOverlay, { padding: 16 }]}>
+          <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%', maxWidth: 640 }]}>
             <View style={styles.modalTitleRow}>
               <MaterialIcons name={contentForm.kind === 'events' ? 'event' : 'photo-camera'} size={18} color={Colors.primary} />
               <Text style={[styles.modalTitle, { color: theme.text }]}>
@@ -1710,6 +1900,58 @@ export default function AdminScreen() {
                     multiline
                     numberOfLines={3}
                   />
+
+                  <View style={styles.hotelSectionHeader}>
+                    <Ionicons name="bed-outline" size={16} color={Colors.primary} />
+                    <Text style={[styles.fieldLabel, { color: theme.textSecondary, marginTop: 0 }]}>{t('Hôtels recommandés à proximité')}</Text>
+                  </View>
+                  <Text style={[styles.hotelSectionSub, { color: theme.textSecondary }]}>
+                    {t("Aidez les visiteurs à trouver où dormir près de ce site.")}
+                  </Text>
+
+                  {contentForm.hotels.length === 0 && (
+                    <Text style={[styles.hotelEmptyText, { color: theme.textSecondary, borderColor: theme.border }]}>
+                      {t("Aucun hôtel ajouté pour l'instant.")}
+                    </Text>
+                  )}
+
+                  {contentForm.hotels.map((hotel, idx) => (
+                    <View key={idx} style={[styles.hotelRow, { borderColor: theme.border }]}>
+                      <View style={styles.hotelBedIcon}>
+                        <Ionicons name="bed" size={14} color={Colors.primary} />
+                      </View>
+                      <View style={{ flex: 1, gap: 6 }}>
+                        <TextInput
+                          style={[styles.fieldInput, styles.hotelInput, { borderColor: theme.border, color: theme.text }]}
+                          value={hotel.name}
+                          onChangeText={v => updateHotelRow(idx, 'name', v)}
+                          placeholder={t("Nom de l'hôtel")}
+                          placeholderTextColor={theme.textSecondary}
+                        />
+                        <TextInput
+                          style={[styles.fieldInput, styles.hotelInput, { borderColor: theme.border, color: theme.text }]}
+                          value={hotel.url}
+                          onChangeText={v => updateHotelRow(idx, 'url', v)}
+                          placeholder="https://..."
+                          placeholderTextColor={theme.textSecondary}
+                          autoCapitalize="none"
+                          keyboardType="url"
+                        />
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => removeHotelRow(idx)}
+                        style={styles.hotelRemoveBtn}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <MaterialIcons name="close" size={18} color={theme.textSecondary} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+
+                  <TouchableOpacity style={[styles.addHotelBtn, { borderColor: Colors.primary }]} onPress={addHotelRow} activeOpacity={0.8}>
+                    <MaterialIcons name="add" size={16} color={Colors.primary} />
+                    <Text style={[styles.addHotelBtnText, { color: Colors.primary }]}>{t('Ajouter un hôtel')}</Text>
+                  </TouchableOpacity>
                 </>
               )}
               <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Description')}</Text>
@@ -1744,6 +1986,7 @@ export default function AdminScreen() {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ADD/EDIT USEFUL NUMBER MODAL */}
@@ -1753,6 +1996,7 @@ export default function AdminScreen() {
         animationType="fade"
         onRequestClose={closeNumberForm}
       >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%' }]}>
             <View style={styles.modalTitleRow}>
@@ -1827,6 +2071,7 @@ export default function AdminScreen() {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ADD/EDIT OFFICIAL SITE MODAL */}
@@ -1836,6 +2081,7 @@ export default function AdminScreen() {
         animationType="fade"
         onRequestClose={closeSiteForm}
       >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%' }]}>
             <View style={styles.modalTitleRow}>
@@ -1923,6 +2169,123 @@ export default function AdminScreen() {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ADD/EDIT USEFUL APPLICATION MODAL */}
+      <Modal
+        visible={appForm.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeAppForm}
+      >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <View style={[styles.modalOverlay, { padding: 16 }]}>
+          <View style={[styles.modalBox, { backgroundColor: theme.card, maxHeight: '85%', maxWidth: 640 }]}>
+            <View style={styles.modalTitleRow}>
+              <Ionicons name="apps" size={18} color={Colors.primary} />
+              <Text style={[styles.modalTitle, { color: theme.text }]}>
+                {appForm.editId ? t('Modifier') : t('Ajouter')} {t('une application')}
+              </Text>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Nom *')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.name}
+                onChangeText={v => setAppForm(prev => ({ ...prev, name: v }))}
+                placeholder={t('Ex : Orange Money, Wave, Yango...')}
+                placeholderTextColor={theme.textSecondary}
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Catégorie *')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.category}
+                onChangeText={v => setAppForm(prev => ({ ...prev, category: v }))}
+                placeholder={t('Ex : Paiement mobile, Transport, Services publics...')}
+                placeholderTextColor={theme.textSecondary}
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t("Icône / logo (URL)")}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.image}
+                onChangeText={v => setAppForm(prev => ({ ...prev, image: v }))}
+                placeholder="https://..."
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Lien Google Play')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.androidUrl}
+                onChangeText={v => setAppForm(prev => ({ ...prev, androidUrl: v }))}
+                placeholder={t('Optionnel — https://play.google.com/...')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Lien App Store')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.iosUrl}
+                onChangeText={v => setAppForm(prev => ({ ...prev, iosUrl: v }))}
+                placeholder={t('Optionnel — https://apps.apple.com/...')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Site web')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.website}
+                onChangeText={v => setAppForm(prev => ({ ...prev, website: v }))}
+                placeholder={t('Optionnel — https://...')}
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Ordre (optionnel)')}</Text>
+              <TextInput
+                style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.order}
+                onChangeText={v => setAppForm(prev => ({ ...prev, order: v.replace(/[^0-9]/g, '') }))}
+                placeholder={t('Plus petit = apparaît en premier')}
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="number-pad"
+              />
+              <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Description')}</Text>
+              <TextInput
+                style={[styles.fieldInput, styles.fieldInputMultiline, { borderColor: theme.border, color: theme.text }]}
+                value={appForm.description}
+                onChangeText={v => setAppForm(prev => ({ ...prev, description: v }))}
+                placeholder={t('Description')}
+                placeholderTextColor={theme.textSecondary}
+                multiline
+                numberOfLines={4}
+              />
+            </ScrollView>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { borderColor: theme.border }]}
+                onPress={closeAppForm}
+                disabled={savingInfo}
+              >
+                <Text style={[styles.modalBtnText, { color: theme.textSecondary }]}>{t('Annuler')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
+                onPress={saveApp}
+                disabled={savingInfo}
+              >
+                {savingInfo
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={[styles.modalBtnText, { color: '#fff', fontWeight: '400' }]}>{t('Enregistrer')}</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* LINK BUSINESS MODAL — set/clear relatedBusinessId, shown as "Voir aussi" on the detail page */}
@@ -2076,6 +2439,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10,
   },
   gpsPickBtnText: { flex: 1, fontSize: 13 },
+  hotelSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
+  hotelSectionSub: { fontSize: 12, lineHeight: 16, marginBottom: 10 },
+  hotelEmptyText: { fontSize: 12, fontStyle: 'italic', borderWidth: 1, borderStyle: 'dashed', borderRadius: 6, padding: 10, marginBottom: 8, textAlign: 'center' },
+  hotelRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderWidth: 1, borderRadius: 8, padding: 8, marginBottom: 8 },
+  hotelBedIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: Colors.primary + '1A', alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  hotelInput: { paddingVertical: 8 },
+  hotelRemoveBtn: { padding: 4, marginTop: 2 },
+  addHotelBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 7, paddingVertical: 11, marginTop: 2 },
+  addHotelBtnText: { fontSize: 13, fontWeight: '400' },
   safe: { flex: 1 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },

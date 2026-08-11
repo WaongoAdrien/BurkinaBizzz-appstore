@@ -1,9 +1,9 @@
 // app/tourism/[id].tsx — Tourist Site Detail Screen
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Image, Share,
-  StyleSheet, Linking, ActivityIndicator, FlatList, Dimensions,
+  StyleSheet, Linking, ActivityIndicator, FlatList, Dimensions, Modal, StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
@@ -25,6 +25,7 @@ registerTranslations({
   'Site introuvable': 'Site not found',
   'Partager': 'Share',
   'Site web': 'Website',
+  'Hôtels recommandés': 'Recommended hotels',
 });
 
 const { width } = Dimensions.get('window');
@@ -39,6 +40,9 @@ export default function TourismSiteDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
   const [editVisible, setEditVisible] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [viewerPhotoIndex, setViewerPhotoIndex] = useState(0);
+  const imageViewerRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -107,8 +111,16 @@ export default function TourismSiteDetailScreen() {
                 setActivePhoto(Math.round(offsetX / containerWidth));
               }}
               scrollEventThrottle={16}
-              renderItem={({ item }) => (
-                <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    setViewerPhotoIndex(index);
+                    setShowImageViewer(true);
+                  }}
+                >
+                  <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
+                </TouchableOpacity>
               )}
             />
             {photos.length > 1 && (
@@ -171,6 +183,34 @@ export default function TourismSiteDetailScreen() {
             </View>
           ) : null}
 
+          {/* RECOMMENDED HOTELS */}
+          {site.hotels && site.hotels.length > 0 && (
+            <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIcon, { backgroundColor: Colors.primary + '22' }]}>
+                  <Ionicons name="bed-outline" size={16} color={Colors.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Hôtels recommandés')}</Text>
+              </View>
+              <View style={{ gap: 8 }}>
+                {site.hotels.map((hotel, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[styles.hotelCard, { borderColor: theme.border }]}
+                    onPress={() => Linking.openURL(normalizeUrl(hotel.url))}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.hotelCardIcon}>
+                      <Ionicons name="bed" size={16} color={Colors.primary} />
+                    </View>
+                    <Text style={[styles.hotelCardName, { color: theme.text }]} numberOfLines={1}>{hotel.name}</Text>
+                    <Ionicons name="open-outline" size={16} color={theme.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* CONTACT */}
           {(site.phone || site.mapLink || site.facebook || site.website) && (
             <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
@@ -232,6 +272,77 @@ export default function TourismSiteDetailScreen() {
           onSaved={(updated) => setSite(prev => prev ? { ...prev, ...updated } as Attraction : prev)}
         />
       )}
+
+      {/* FULL-SCREEN IMAGE VIEWER */}
+      <Modal
+        visible={showImageViewer}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowImageViewer(false)}
+      >
+        <View style={styles.imageViewerContainer}>
+          <StatusBar barStyle="light-content" backgroundColor="#000" />
+
+          <TouchableOpacity
+            style={styles.imageViewerClose}
+            onPress={() => setShowImageViewer(false)}
+          >
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+
+          {photos.length > 1 && (
+            <View style={styles.imageViewerCounter}>
+              <Text style={styles.imageViewerCounterText}>
+                {viewerPhotoIndex + 1} / {photos.length}
+              </Text>
+            </View>
+          )}
+
+          <FlatList
+            ref={imageViewerRef}
+            data={photos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, i) => `viewer-${i}`}
+            initialScrollIndex={viewerPhotoIndex}
+            getItemLayout={(_, index) => ({
+              length: width,
+              offset: width * index,
+              index,
+            })}
+            onScrollToIndexFailed={(info) => {
+              setTimeout(() => {
+                imageViewerRef.current?.scrollToIndex({ index: info.index, animated: false });
+              }, 50);
+            }}
+            onMomentumScrollEnd={e => setViewerPhotoIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+            renderItem={({ item }) => (
+              <View style={styles.imageViewerSlide}>
+                <Image
+                  source={{ uri: item }}
+                  style={styles.imageViewerPhoto}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+          />
+
+          {photos.length > 1 && (
+            <View style={styles.imageViewerDots}>
+              {photos.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.imageViewerDot,
+                    { backgroundColor: i === viewerPhotoIndex ? '#fff' : 'rgba(255,255,255,0.4)' }
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      </Modal>
     </>
   );
 }
@@ -266,4 +377,15 @@ const styles = StyleSheet.create({
     paddingVertical: 13, paddingHorizontal: 16, borderRadius: 7, flexGrow: 1,
   },
   actionBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
+  hotelCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 8, paddingVertical: 12, paddingHorizontal: 12 },
+  hotelCardIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.primary + '22', alignItems: 'center', justifyContent: 'center' },
+  hotelCardName: { flex: 1, fontSize: 14, fontWeight: '400' },
+  imageViewerContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
+  imageViewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  imageViewerCounter: { position: 'absolute', top: 50, left: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 7 },
+  imageViewerCounterText: { fontSize: 14, color: '#fff', fontWeight: '400' },
+  imageViewerSlide: { width, height: '100%', justifyContent: 'center', alignItems: 'center' },
+  imageViewerPhoto: { width: '100%', height: '100%' },
+  imageViewerDots: { position: 'absolute', bottom: 40, alignSelf: 'center', flexDirection: 'row', gap: 6 },
+  imageViewerDot: { width: 8, height: 8, borderRadius: 4 },
 });
