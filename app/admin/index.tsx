@@ -715,55 +715,54 @@ export default function AdminScreen() {
     const dupeNote = dupes.length > 0
       ? `\n\n${t('Doublon avec :')} ${dupes.map(b => `"${b.name}"${b._exact ? t(' (identique)') : b._score >= DUPE_THRESHOLD ? t(' (très similaire)') : t(' (faute probable)')}`).join(', ')}`
       : '';
-    Alert.alert(
+    confirmDialog(
       dupes.length > 0 ? t('Doublon détecté') : t('Approuver cette entreprise?'),
       `"${item.name}"${t(" apparaîtra dans l'annuaire.")}${dupeNote}`,
-      [
-        { text: t('Annuler'), style: 'cancel' },
-        {
-          text: t('Approuver'), onPress: async () => {
-            setActionId(item.id);
-            try {
-              await updateDoc(doc(db, 'businesses', item.id), { status: 'approved' });
-            } catch (e: any) {
-              Alert.alert(t('Erreur'), e?.message || t("Impossible d'approuver."));
-            } finally { setActionId(null); }
-          },
-        },
-      ]
+      t('Approuver'),
+      t('Annuler'),
+      async () => {
+        setActionId(item.id);
+        try {
+          await updateDoc(doc(db, 'businesses', item.id), { status: 'approved' });
+        } catch (e: any) {
+          Alert.alert(t('Erreur'), e?.message || t("Impossible d'approuver."));
+        } finally { setActionId(null); }
+      }
     );
   };
 
   const rejectBusiness = (item: any) => {
-    Alert.alert(t('Rejeter cette entreprise?'), `"${item.name}"${t(' sera supprimée définitivement.')}`, [
-      { text: t('Annuler'), style: 'cancel' },
-      {
-        text: t('Rejeter'), style: 'destructive', onPress: async () => {
-          setActionId(item.id);
-          try {
-            await deleteDoc(doc(db, 'businesses', item.id));
-          } catch (e: any) {
-            Alert.alert(t('Erreur'), e?.message || t('Impossible de rejeter.'));
-          } finally { setActionId(null); }
-        },
-      },
-    ]);
+    confirmDialog(
+      t('Rejeter cette entreprise?'),
+      `"${item.name}"${t(' sera supprimée définitivement.')}`,
+      t('Rejeter'),
+      t('Annuler'),
+      async () => {
+        setActionId(item.id);
+        try {
+          await deleteDoc(doc(db, 'businesses', item.id));
+        } catch (e: any) {
+          Alert.alert(t('Erreur'), e?.message || t('Impossible de rejeter.'));
+        } finally { setActionId(null); }
+      }
+    );
   };
 
   const revokeBusiness = (item: any) => {
-    Alert.alert(t('Retirer de l\'annuaire?'), `"${item.name}"${t(' ne sera plus visible.')}`, [
-      { text: t('Annuler'), style: 'cancel' },
-      {
-        text: t('Retirer'), style: 'destructive', onPress: async () => {
-          setActionId(item.id);
-          try {
-            await updateDoc(doc(db, 'businesses', item.id), { status: 'pending' });
-          } catch (e: any) {
-            Alert.alert(t('Erreur'), e?.message || t('Impossible.'));
-          } finally { setActionId(null); }
-        },
-      },
-    ]);
+    confirmDialog(
+      t('Retirer de l\'annuaire?'),
+      `"${item.name}"${t(' ne sera plus visible.')}`,
+      t('Retirer'),
+      t('Annuler'),
+      async () => {
+        setActionId(item.id);
+        try {
+          await updateDoc(doc(db, 'businesses', item.id), { status: 'pending' });
+        } catch (e: any) {
+          Alert.alert(t('Erreur'), e?.message || t('Impossible.'));
+        } finally { setActionId(null); }
+      }
+    );
   };
 
   // ── User actions ────────────────────────────────────────────────────────
