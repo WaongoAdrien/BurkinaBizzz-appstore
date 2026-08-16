@@ -15,6 +15,7 @@ import { Business, Category } from '../types';
 import { Colors, CATEGORIES, CITY_CATEGORIES } from '../constants';
 import { useColorTheme } from '../hooks/useColorTheme';
 import { CategoryIcon } from '../components/CategoryIcon';
+import { OpeningHoursStatus } from '../components/OpeningHoursStatus';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
@@ -142,6 +143,7 @@ export default function AnnuaireSouthKoreaScreen() {
             <Text style={[styles.cardDesc, { color: theme.textSecondary }]} numberOfLines={2}>
               {item.description}
             </Text>
+            <OpeningHoursStatus openingHours={item.openingHours} variant="compact" hideWhenMissing />
             <View style={styles.cardFooter}>
               <Text style={[styles.cardCity, { color: theme.textSecondary }]}>📍 {item.city}</Text>
               <View style={styles.socialRow}>

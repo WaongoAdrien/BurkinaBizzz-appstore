@@ -18,6 +18,7 @@ import { Colors, CATEGORIES, CITIES, CITY_CATEGORIES } from '../constants';
 import { useColorTheme } from '../hooks/useColorTheme';
 import { CategoryIcon } from '../components/CategoryIcon';
 import { ContentContainer } from '../components/ContentContainer';
+import { OpeningHoursStatus } from '../components/OpeningHoursStatus';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
@@ -285,6 +286,7 @@ export default function AnnuaireScreen() {
             <Text style={[styles.cardDesc, { color: theme.textSecondary }]} numberOfLines={2}>
               {item.description}
             </Text>
+            <OpeningHoursStatus openingHours={item.openingHours} variant="compact" hideWhenMissing />
             <View style={styles.cardFooter}>
               <Text style={[styles.cardCity, { color: theme.textSecondary }]}>📍 {item.city}</Text>
               <View style={styles.socialRow}>

@@ -6,6 +6,22 @@ export interface BusinessLocation {
   longitude?: number;
 }
 
+export interface DayHours {
+  open?: string;    // "HH:MM", 24h
+  close?: string;   // "HH:MM", 24h
+  closed: boolean;
+}
+
+export interface OpeningHours {
+  monday: DayHours;
+  tuesday: DayHours;
+  wednesday: DayHours;
+  thursday: DayHours;
+  friday: DayHours;
+  saturday: DayHours;
+  sunday: DayHours;
+}
+
 export interface Business {
   id: string;
   name: string;
@@ -30,6 +46,7 @@ export interface Business {
   priority?: number;       // NEW: manual ordering (0-100, higher = appears first)
     verified?: boolean;  // NEW: admin verified status
   relatedBusinessId?: string; // NEW: links to another business listing (e.g. a second branch/location)
+  openingHours?: OpeningHours; // NEW: per-day open/close times, used to compute live Ouvert/Fermé status
 }
 
 export interface User {

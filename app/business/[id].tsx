@@ -24,6 +24,8 @@ import { Colors, CATEGORIES, WHATSAPP_GREETING } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { ContentContainer } from '../../components/ContentContainer';
+import { OpeningHoursStatus } from '../../components/OpeningHoursStatus';
+import { OpeningHoursWeekly } from '../../components/OpeningHoursWeekly';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 
 registerTranslations({
@@ -66,6 +68,7 @@ registerTranslations({
   'Vérifié': 'Verified',
   'À propos': 'About',
   'Contacter': 'Contact',
+  'Horaires': 'Hours',
   'Appeler': 'Call',
   'WhatsApp': 'WhatsApp',
   'Réseaux sociaux': 'Social media',
@@ -600,6 +603,10 @@ export default function BusinessDetailScreen() {
                   <Text style={[styles.city, { color: theme.textSecondary }]}>{business.city}</Text>
                 </View>
               </View>
+              {/* OPEN/CLOSED STATUS */}
+              <View style={{ marginTop: 8 }}>
+                <OpeningHoursStatus openingHours={business.openingHours} hideWhenMissing />
+              </View>
               {/* RATING SUMMARY */}
               {reviews.length > 0 && (
                 <View style={styles.ratingRow}>
@@ -665,6 +672,14 @@ export default function BusinessDetailScreen() {
               )}
             </View>
           </View>
+
+          {/* HORAIRES */}
+          {business.openingHours && (
+            <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
+              <SectionHeader icon="time-outline" color="#00838F" title={t('Horaires')} theme={theme} />
+              <OpeningHoursWeekly openingHours={business.openingHours} theme={theme} />
+            </View>
+          )}
 
           {/* SOCIAL */}
           {(business.facebook || business.instagram || business.website) && (

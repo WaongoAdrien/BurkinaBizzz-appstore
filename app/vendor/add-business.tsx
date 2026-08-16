@@ -17,7 +17,9 @@ import { containsProfanity } from '../../lib/profanityFilter';
 import { useAuth } from '../../lib/AuthContext';
 import { Colors, CATEGORIES, CITIES, CITY_CATEGORIES } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
-import { Category, City, BusinessLocation } from '../../types';
+import { Category, City, BusinessLocation, OpeningHours } from '../../types';
+import { defaultOpeningHours } from '../../lib/openingHours';
+import { OpeningHoursEditor } from '../../components/OpeningHoursEditor';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 
 registerTranslations({
@@ -25,6 +27,7 @@ registerTranslations({
   'Annuler': 'Cancel',
   'Informations': 'Information',
   'Contact': 'Contact',
+  'Horaires': 'Hours',
   'Réseaux': 'Social',
   'Localisation': 'Location',
   'Photos': 'Photos',
@@ -179,7 +182,7 @@ function PickerModal({ visible, title, items, selected, onSelect, onClose, cardC
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_PHOTOS = 5;
-const STEPS = ['Informations', 'Contact', 'Réseaux', 'Localisation', 'Photos'];
+const STEPS = ['Informations', 'Contact', 'Horaires', 'Réseaux', 'Localisation', 'Photos'];
 
 export default function AddBusinessScreen() {
   const router = useRouter();
@@ -199,6 +202,7 @@ export default function AddBusinessScreen() {
   const [instagram, setInstagram] = useState('');
   const [website, setWebsite] = useState('');
   const [photoUris, setPhotoUris] = useState<string[]>([]);
+  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours());
   const [location, setLocation] = useState<BusinessLocation | undefined>(undefined);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
 
@@ -379,6 +383,7 @@ export default function AddBusinessScreen() {
         website: website.trim() || null,
         photos: uploadedUrls,
         coverPhoto: uploadedUrls[0] || '',
+        openingHours,
         ownerId: user.uid,
         ownerName: userProfile?.name || user.email || '',
         location: location && (location.address || location.latitude) ? {
@@ -516,8 +521,15 @@ export default function AddBusinessScreen() {
           </View>
         )}
 
-        {/* STEP 2: Réseaux sociaux */}
+        {/* STEP 2: Horaires d'ouverture */}
         {step === 2 && (
+          <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <OpeningHoursEditor value={openingHours} onChange={setOpeningHours} theme={theme} />
+          </View>
+        )}
+
+        {/* STEP 3: Réseaux sociaux */}
+        {step === 3 && (
           <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Field label={t('Facebook')} value={facebook} onChangeText={setFacebook}
               placeholder={t('Lien ou nom de la page')} optional {...fp} />
@@ -528,8 +540,8 @@ export default function AddBusinessScreen() {
           </View>
         )}
 
-        {/* STEP 3: Localisation */}
-        {step === 3 && (
+        {/* STEP 4: Localisation */}
+        {step === 4 && (
           <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.hint, { color: theme.textSecondary }]}>
               {t('Optionnel. Aidez vos clients à vous trouver.')}
@@ -555,8 +567,8 @@ export default function AddBusinessScreen() {
           </View>
         )}
 
-        {/* STEP 4: Photos */}
-        {step === 4 && (
+        {/* STEP 5: Photos */}
+        {step === 5 && (
           <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.hint, { color: theme.textSecondary }]}>
               {t(`Jusqu'à ${MAX_PHOTOS} photos. La première = couverture.`)}

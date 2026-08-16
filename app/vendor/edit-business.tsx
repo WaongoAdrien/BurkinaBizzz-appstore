@@ -16,11 +16,14 @@ import { containsProfanity } from '../../lib/profanityFilter';
 import { useAuth } from '../../lib/AuthContext';
 import { Colors, CATEGORIES, CITIES, CITY_CATEGORIES } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
-import { Category, City, BusinessLocation } from '../../types';
+import { Category, City, BusinessLocation, OpeningHours } from '../../types';
+import { defaultOpeningHours } from '../../lib/openingHours';
+import { OpeningHoursEditor } from '../../components/OpeningHoursEditor';
 import LocationPicker from '../../components/Locationpicker';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 
 registerTranslations({
+  "🕒 Horaires d'ouverture": '🕒 Opening hours',
   'optionnel': 'optional',
   'Annuler': 'Cancel',
   'Erreur': 'Error',
@@ -161,6 +164,7 @@ export default function EditBusinessScreen() {
   const [instagram, setInstagram] = useState('');
   const [website, setWebsite] = useState('');
   const [priority, setPriority] = useState<number>(0);
+  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours());
   const [location, setLocation] = useState<BusinessLocation | undefined>(undefined);
 
   // Existing remote photo URLs
@@ -202,6 +206,7 @@ export default function EditBusinessScreen() {
       setInstagram(d.instagram || '');
       setWebsite(d.website || '');
       setPriority(d.priority || 0);
+      setOpeningHours(d.openingHours || defaultOpeningHours());
       setExistingPhotos(d.photos || (d.coverPhoto ? [d.coverPhoto] : []));
       if (d.location) setLocation(d.location);
     }).finally(() => setFetchLoading(false));
@@ -324,6 +329,7 @@ export default function EditBusinessScreen() {
         website: website.trim() || null,
         photos: allPhotos,
         coverPhoto: allPhotos[0] || '',
+        openingHours,
         location: location && (location.address || location.latitude) ? {
           address: location.address ?? null,
           latitude: location.latitude ?? null,
@@ -441,6 +447,11 @@ export default function EditBusinessScreen() {
             placeholder="+22670000000" keyboardType="phone-pad" error={errors.phone} {...fp} />
           <Field label={t('WhatsApp')} value={whatsapp} onChangeText={setWhatsapp}
             placeholder={t('+22670000000 (si différent)')} keyboardType="phone-pad" optional {...fp} />
+        </View>
+
+        <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.formSection, { color: Colors.primary }]}>{t("🕒 Horaires d'ouverture")}</Text>
+          <OpeningHoursEditor value={openingHours} onChange={setOpeningHours} theme={theme} />
         </View>
 
         <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
