@@ -12,7 +12,7 @@ import { ContentContainer } from '../components/ContentContainer';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
-  'Par Catégorie': 'By Category',
+  'Entreprise par Catégorie': 'Business by Category',
   'Voir toutes les catégories': 'Browse all categories',
   'Produits à vendre': 'Products for sale',
   'Négociez le prix directement sur WhatsApp': 'Negotiate the price directly on WhatsApp',
@@ -112,7 +112,7 @@ export default function MoreScreen() {
               <Ionicons name="grid" size={22} color={Colors.cta} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Par Catégorie')}</Text>
+              <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Entreprise par Catégorie')}</Text>
               <Text style={[styles.categoriesLinkSub, { color: theme.textSecondary }]}>{t('Voir toutes les catégories')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />

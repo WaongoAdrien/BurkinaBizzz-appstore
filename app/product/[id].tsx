@@ -149,7 +149,7 @@ export default function ProductDetailScreen() {
 
         {/* PHOTO GALLERY */}
         <View style={{ width: '100%', alignItems: 'center' }}>
-          <View style={{ width: '100%', maxWidth: width }}>
+          <View style={{ width: '100%', maxWidth: width, position: 'relative' }}>
             {photos.length > 0 ? (
               <View style={{ width: '100%', height: 280, position: 'relative' }}>
                 <FlatList
@@ -180,6 +180,9 @@ export default function ProductDetailScreen() {
                 )}
               </View>
             )}
+            <TouchableOpacity style={styles.shareImgBtn} onPress={handleShare} activeOpacity={0.8}>
+              <Ionicons name="share-outline" size={20} color="#fff" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -272,14 +275,6 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          {/* SHARE */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: Colors.headerGradient[0] }]} onPress={handleShare} activeOpacity={0.85}>
-              <Ionicons name="share-outline" size={18} color="#fff" />
-              <Text style={styles.actionBtnText}>{t('Partager')}</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* INFO CARD */}
           <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             {product.phone && <InfoRow iconName="call" label={t('Téléphone')} value={product.phone} theme={theme} />}
@@ -348,8 +343,10 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: 'row', gap: 10 },
   contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 10, borderRadius: 7, gap: 6, minWidth: 0 },
   contactBtnText: { color: '#fff', fontSize: 14, fontWeight: '400', flexShrink: 1, textAlign: 'center' },
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 7 },
-  actionBtnText: { fontSize: 14, fontWeight: '400', color: '#fff' },
+  shareImgBtn: {
+    position: 'absolute', top: 16, right: 16,
+    backgroundColor: 'rgba(0,0,0,0.45)', width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center',
+  },
   infoCard: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, marginTop: 16 },
 });
