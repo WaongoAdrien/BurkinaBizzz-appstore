@@ -79,7 +79,7 @@ export interface Product {
 export type ProductCategory =
   | 'Téléphones & Tablettes'
   | 'Électronique'
-  | 'Informatique'
+  | 'Produits Locaux'
   | 'Véhicules'
   | 'Mode & Vêtements'
   | 'Meubles & Maison'

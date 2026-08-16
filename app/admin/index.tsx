@@ -174,9 +174,22 @@ registerTranslations({
   'Supprimer ce site?': 'Delete this site?',
   'Ex : Police Secours': 'E.g.: Police Emergency',
   'Ex : Présidence du Faso': 'E.g.: Présidence du Faso',
+
+  // Products
+  'Produits': 'Products',
+  'Produits en attente': 'Products pending',
+  'Rechercher un produit ou un vendeur...': 'Search for a product or a vendor...',
+  'Résultats pour tous les statuts (en attente + publiés)': 'Results across all statuses (pending + published)',
+  'Aucun produit en attente': 'No product pending',
+  'Aucun produit publié': 'No product published',
+  'Approuver ce produit?': 'Approve this product?',
+  ' apparaîtra dans le marché.': ' will appear in the marketplace.',
+  'Rejeter ce produit?': 'Reject this product?',
+  'Retirer du marché?': 'Remove from marketplace?',
+  'Négociable': 'Negotiable',
 });
 
-type Tab = 'businesses' | 'users' | 'reports' | 'events' | 'attractions' | 'info';
+type Tab = 'businesses' | 'products' | 'users' | 'reports' | 'events' | 'attractions' | 'info';
 type ContentKind = 'events' | 'attractions';
 type InfoSubTab = 'numbers' | 'sites' | 'apps';
 
@@ -317,6 +330,12 @@ export default function AdminScreen() {
   const [pendingBiz, setPendingBiz] = useState<any[]>([]);
   const [approvedBiz, setApprovedBiz] = useState<any[]>([]);
 
+  // Products
+  const [pendingProducts, setPendingProducts] = useState<any[]>([]);
+  const [approvedProducts, setApprovedProducts] = useState<any[]>([]);
+  const [productTab, setProductTab] = useState<'pending' | 'approved'>('pending');
+  const [productSearch, setProductSearch] = useState('');
+
   // Users
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<any[]>([]);
@@ -392,6 +411,16 @@ export default function AdminScreen() {
       snap => { setApprovedBiz(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort(sort)); }
     );
 
+    // ── Products ─────────────────────────────────────────────────────────
+    const uP1 = onSnapshot(
+      query(collection(db, 'products'), where('status', '==', 'pending')),
+      snap => { setPendingProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort(sort)); }
+    );
+    const uP2 = onSnapshot(
+      query(collection(db, 'products'), where('status', '==', 'approved')),
+      snap => { setApprovedProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort(sort)); }
+    );
+
     // ── Users ────────────────────────────────────────────────────────────
     const u3 = onSnapshot(
       query(collection(db, 'users'), where('role', '==', 'pending')),
@@ -432,7 +461,7 @@ export default function AdminScreen() {
       snap => setUsefulApps(snap.docs.map(d => ({ id: d.id, ...d.data() })))
     );
 
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); u8(); u9(); u10(); };
+    return () => { u1(); u2(); uP1(); uP2(); u3(); u4(); u5(); u6(); u7(); u8(); u9(); u10(); };
   }, [isAdmin]);
 
   // ── Events & attractions actions ────────────────────────────────────────
@@ -765,6 +794,58 @@ export default function AdminScreen() {
     );
   };
 
+  // ── Product actions ─────────────────────────────────────────────────────
+  const approveProduct = (item: any) => {
+    confirmDialog(
+      t('Approuver ce produit?'),
+      `"${item.name}"${t(' apparaîtra dans le marché.')}`,
+      t('Approuver'),
+      t('Annuler'),
+      async () => {
+        setActionId(item.id);
+        try {
+          await updateDoc(doc(db, 'products', item.id), { status: 'approved' });
+        } catch (e: any) {
+          Alert.alert(t('Erreur'), e?.message || t("Impossible d'approuver."));
+        } finally { setActionId(null); }
+      }
+    );
+  };
+
+  const rejectProduct = (item: any) => {
+    confirmDialog(
+      t('Rejeter ce produit?'),
+      `"${item.name}"${t(' sera supprimé définitivement.')}`,
+      t('Rejeter'),
+      t('Annuler'),
+      async () => {
+        setActionId(item.id);
+        try {
+          await deleteDoc(doc(db, 'products', item.id));
+        } catch (e: any) {
+          Alert.alert(t('Erreur'), e?.message || t('Impossible de rejeter.'));
+        } finally { setActionId(null); }
+      }
+    );
+  };
+
+  const revokeProduct = (item: any) => {
+    confirmDialog(
+      t('Retirer du marché?'),
+      `"${item.name}"${t(' ne sera plus visible.')}`,
+      t('Retirer'),
+      t('Annuler'),
+      async () => {
+        setActionId(item.id);
+        try {
+          await updateDoc(doc(db, 'products', item.id), { status: 'pending' });
+        } catch (e: any) {
+          Alert.alert(t('Erreur'), e?.message || t('Impossible.'));
+        } finally { setActionId(null); }
+      }
+    );
+  };
+
   // ── User actions ────────────────────────────────────────────────────────
   const approveUser = (item: any) => {
     Alert.alert(t('Approuver ce vendeur?'), `${item.name}${t(' pourra soumettre des entreprises.')}`, [
@@ -966,6 +1047,123 @@ export default function AdminScreen() {
         <TouchableOpacity
           style={[styles.revokeBtn, { borderColor: theme.border }]}
           onPress={() => revokeBusiness(item)}
+          disabled={actionId === item.id}
+        >
+          {actionId === item.id
+            ? <ActivityIndicator size="small" color={theme.textSecondary} />
+            : <><MaterialIcons name="block" size={13} color={theme.textSecondary} /><Text style={[styles.revokeText, { color: theme.textSecondary }]}>{t('Retirer')}</Text></>
+          }
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderPendingProduct = ({ item }: { item: any }) => (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.cardTop}>
+        <View style={[styles.avatar, { backgroundColor: Colors.cta + '33' }]}>
+          <Text style={styles.avatarText}>{(item.name || '?')[0].toUpperCase()}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
+          <View style={styles.metaRow}>
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.category}</Text>
+            <MaterialIcons name="place" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.city}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="sell" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{Number(item.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+            {item.negotiable && (
+              <View style={[styles.priorityBadge, { backgroundColor: '#E8F5E9' }]}>
+                <Text style={[styles.priorityText, { color: '#1B5E20' }]}>{t('Négociable')}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="person" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.ownerName}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="phone" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.phone}</Text>
+          </View>
+        </View>
+        <View style={[styles.badge, { backgroundColor: Colors.cta + '22' }]}>
+          <Text style={[styles.badgeText, { color: Colors.cta }]}>{t('En attente')}</Text>
+        </View>
+      </View>
+      {item.description ? (
+        <Text style={[styles.desc, { color: theme.textSecondary }]} numberOfLines={2}>{item.description}</Text>
+      ) : null}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.rejectBtn}
+          onPress={() => rejectProduct(item)}
+          disabled={actionId === item.id}
+        >
+          {actionId === item.id
+            ? <ActivityIndicator size="small" color="#D32F2F" />
+            : <><MaterialIcons name="close" size={14} color="#D32F2F" /><Text style={styles.rejectText}>{t('Rejeter')}</Text></>
+          }
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.approveBtn}
+          onPress={() => approveProduct(item)}
+          disabled={actionId === item.id}
+        >
+          {actionId === item.id
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <><MaterialIcons name="check" size={14} color="#fff" /><Text style={styles.approveText}>{t('Approuver')}</Text></>
+          }
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderApprovedProduct = ({ item }: { item: any }) => (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.cardTop}>
+        <View style={[styles.avatar, { backgroundColor: Colors.primary + '33' }]}>
+          <Text style={styles.avatarText}>{(item.name || '?')[0].toUpperCase()}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: theme.text, flex: 1 }]} numberOfLines={1}>{item.name}</Text>
+          <View style={styles.metaRow}>
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.category}</Text>
+            <MaterialIcons name="place" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.city}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="sell" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{Number(item.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+            {item.negotiable && (
+              <View style={[styles.priorityBadge, { backgroundColor: '#E8F5E9' }]}>
+                <Text style={[styles.priorityText, { color: '#1B5E20' }]}>{t('Négociable')}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.metaRow}>
+            <MaterialIcons name="person" size={12} color={theme.textSecondary} />
+            <Text style={[styles.meta, { color: theme.textSecondary }]}>{item.ownerName}</Text>
+          </View>
+        </View>
+        <View style={[styles.badge, { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.primary + '22' }]}>
+          <MaterialIcons name="check-circle" size={12} color={Colors.primary} />
+          <Text style={[styles.badgeText, { color: Colors.primary }]}>{t('Publié')}</Text>
+        </View>
+      </View>
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={[styles.editAdminBtn, { borderColor: Colors.cta, backgroundColor: Colors.cta + '22' }]}
+          onPress={() => router.push(`/vendor/edit-product?id=${item.id}`)}
+        >
+          <MaterialIcons name="edit" size={14} color={Colors.cta} />
+          <Text style={[styles.editAdminText, { color: Colors.cta }]}>{t('Modifier')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.revokeBtn, { borderColor: theme.border }]}
+          onPress={() => revokeProduct(item)}
           disabled={actionId === item.id}
         >
           {actionId === item.id
@@ -1313,6 +1511,11 @@ export default function AdminScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
+            <Text style={styles.statNum}>{pendingProducts.length}</Text>
+            <Text style={styles.statLbl}>{t('Produits en attente')}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
             <Text style={styles.statNum}>{pendingUsers.length}</Text>
             <Text style={styles.statLbl}>{t('Vendeurs en attente')}</Text>
           </View>
@@ -1335,6 +1538,17 @@ export default function AdminScreen() {
             <MaterialIcons name="storefront" size={16} color={tab === 'businesses' ? Colors.primary : theme.textSecondary} />
             <Text style={[styles.mainTabText, { color: tab === 'businesses' ? Colors.primary : theme.textSecondary }]}>
               {t('Entreprises')} {pendingBiz.length > 0 ? `(${pendingBiz.length})` : ''}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.mainTabBtn, tab === 'products' && { borderBottomColor: Colors.cta, borderBottomWidth: 2.5 }]}
+          onPress={() => setTab('products')}
+        >
+          <View style={styles.tabInner}>
+            <MaterialIcons name="sell" size={16} color={tab === 'products' ? Colors.cta : theme.textSecondary} />
+            <Text style={[styles.mainTabText, { color: tab === 'products' ? Colors.cta : theme.textSecondary }]}>
+              {t('Produits')} {pendingProducts.length > 0 ? `(${pendingProducts.length})` : ''}
             </Text>
           </View>
         </TouchableOpacity>
@@ -1452,6 +1666,76 @@ export default function AdminScreen() {
                 <MaterialIcons name={bizSearch ? 'search-off' : bizTab === 'pending' ? 'celebration' : 'storefront'} size={48} color={theme.textSecondary} />
                 <Text style={[styles.emptyText, { color: theme.text }]}>
                   {bizSearch ? t('Aucun résultat') : bizTab === 'pending' ? t('Aucune entreprise en attente') : t('Aucune entreprise publiée')}
+                </Text>
+              </View>
+            }
+          />
+        </>
+      )}
+
+      {!loading && tab === 'products' && (
+        <>
+          {/* SEARCH BAR */}
+          <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <MaterialIcons name="search" size={16} color={theme.textSecondary} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholder={t('Rechercher un produit ou un vendeur...')}
+              placeholderTextColor={theme.textSecondary}
+              value={productSearch}
+              onChangeText={setProductSearch}
+              autoCorrect={false}
+            />
+            {productSearch.length > 0 && (
+              <TouchableOpacity onPress={() => setProductSearch('')}>
+                <MaterialIcons name="close" size={16} color={theme.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {productSearch.trim() ? (
+            <Text style={[styles.searchHint, { color: theme.textSecondary }]}>
+              {t('Résultats pour tous les statuts (en attente + publiés)')}
+            </Text>
+          ) : (
+            <View style={[styles.subTabRow, { backgroundColor: theme.surface }]}>
+              {(['pending', 'approved'] as const).map(st => (
+                <TouchableOpacity key={st}
+                  style={[styles.subTabBtn, productTab === st && { backgroundColor: Colors.primary }]}
+                  onPress={() => setProductTab(st)}>
+                  <Text style={[styles.subTabText, { color: productTab === st ? '#fff' : theme.textSecondary }]}>
+                    {st === 'pending' ? `${t('En attente')} (${pendingProducts.length})` : `${t('Publiées')} (${approvedProducts.length})`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+          <FlatList
+            data={(() => {
+              const s = productSearch.trim().toLowerCase();
+              // Searching looks across both pending and approved, so an admin can find
+              // every product a given vendor has submitted regardless of approval status.
+              const source = s ? [...pendingProducts, ...approvedProducts] : (productTab === 'pending' ? pendingProducts : approvedProducts);
+              if (!s) return source;
+              return source.filter(p =>
+                p.name?.toLowerCase().includes(s) ||
+                p.ownerName?.toLowerCase().includes(s) ||
+                p.city?.toLowerCase().includes(s)
+              );
+            })()}
+            keyExtractor={item => item.id}
+            renderItem={productSearch.trim()
+              ? (({ item }) => item.status === 'approved' ? renderApprovedProduct({ item }) : renderPendingProduct({ item }))
+              : (productTab === 'pending' ? renderPendingProduct : renderApprovedProduct)}
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(true)} tintColor={Colors.primary} colors={[Colors.primary]} />}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <MaterialIcons name={productSearch ? 'search-off' : productTab === 'pending' ? 'celebration' : 'sell'} size={48} color={theme.textSecondary} />
+                <Text style={[styles.emptyText, { color: theme.text }]}>
+                  {productSearch ? t('Aucun résultat') : productTab === 'pending' ? t('Aucun produit en attente') : t('Aucun produit publié')}
                 </Text>
               </View>
             }
@@ -2452,11 +2736,11 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   headerTitle: { fontSize: 20, fontWeight: '400', color: '#fff' },
   headerSub: { fontSize: 12, color: '#A5D6A7', marginTop: 1 },
-  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 32 },
-  statItem: { alignItems: 'center' },
+  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  statItem: { flex: 1, minWidth: 0, alignItems: 'center' },
   statNum: { fontSize: 26, fontWeight: '400', color: '#fff' },
-  statLbl: { fontSize: 11, color: '#A5D6A7', marginTop: 1 },
-  statDivider: { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' },
+  statLbl: { fontSize: 11, color: '#A5D6A7', marginTop: 1, textAlign: 'center' },
+  statDivider: { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.3)', flexShrink: 0 },
   quickLinksRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
   quickLinkBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   quickLinkText: { fontSize: 12, fontWeight: '400', textDecorationLine: 'underline' },
@@ -2471,6 +2755,7 @@ const styles = StyleSheet.create({
   searchBox: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, marginTop: 12, marginBottom: 8, borderRadius: 6, borderWidth: 1.5, paddingHorizontal: 12, paddingVertical: 10 },
   searchIcon: { fontSize: 14, marginRight: 8 },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 2 },
+  searchHint: { fontSize: 12, marginHorizontal: 12, marginBottom: 8, fontStyle: 'italic' },
   subTabRow: { flexDirection: 'row', margin: 12, borderRadius: 6, padding: 4, gap: 4 },
   subTabBtn: { flex: 1, paddingVertical: 8, borderRadius: 4, alignItems: 'center' },
   subTabText: { fontSize: 13, fontWeight: '400' },

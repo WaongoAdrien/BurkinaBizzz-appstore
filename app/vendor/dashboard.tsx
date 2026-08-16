@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  Alert, Image, ActivityIndicator, RefreshControl, StatusBar,
+  Alert, Image, ActivityIndicator, RefreshControl, StatusBar, ScrollView,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,8 +11,8 @@ import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/f
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../lib/AuthContext';
 import { useLikes } from '../../hooks/useLikes';
-import { Business } from '../../types';
-import { Colors, CATEGORIES } from '../../constants';
+import { Business, Product } from '../../types';
+import { Colors, CATEGORIES, PRODUCT_CATEGORIES } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
@@ -33,16 +33,21 @@ registerTranslations({
   'Publiées': 'Published',
   'Favoris': 'Favorites',
   '+ Référencer mon entreprise': '+ List my business',
+  '+ Vendre un produit': '+ Sell a product',
   'Mes entreprises': 'My businesses',
+  'Mes produits': 'My products',
   'Aucune entreprise soumise': 'No business submitted',
   "Appuyez sur \"Référencer\" pour ajouter votre entreprise à l'annuaire.": 'Tap "List" to add your business to the directory.',
+  'Aucun produit soumis': 'No product submitted',
+  "Appuyez sur \"Vendre un produit\" pour publier votre première annonce.": 'Tap "Sell a product" to publish your first listing.',
+  'Supprimer ce produit?': 'Delete this product?',
   'Aucun favori': 'No favorites',
   "Parcourez l'annuaire et appuyez sur le cœur pour sauvegarder des entreprises.": 'Browse the directory and tap the heart to save businesses.',
   "Voir l'annuaire": 'View directory',
   "Voir plus d'entreprises": 'See more businesses',
 });
 
-type Tab = 'businesses' | 'liked';
+type Tab = 'businesses' | 'products' | 'liked';
 
 export default function VendorDashboardScreen() {
   const router = useRouter();
@@ -51,7 +56,9 @@ export default function VendorDashboardScreen() {
   const { likedProducts: likedBusinesses, unlike, loading: likesLoading } = useLikes(user?.uid);
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('businesses');
@@ -106,6 +113,33 @@ export default function VendorDashboardScreen() {
       setRefreshing(false);
     });
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'products'), where('ownerId', '==', user.uid));
+    return onSnapshot(q, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+      const toMs = (v: any) => v?.toDate?.()?.getTime?.() ?? (v instanceof Date ? v.getTime() : new Date(v).getTime());
+      data.sort((a, b) => toMs(b.createdAt) - toMs(a.createdAt));
+      setProducts(data);
+      setProductsLoading(false);
+    });
+  }, [user]);
+
+  const handleDeleteProduct = (p: Product) => {
+    Alert.alert(t('Supprimer ce produit?'), `${t('Supprimer')} "${p.name}" ?`, [
+      { text: t('Annuler'), style: 'cancel' },
+      {
+        text: t('Supprimer'), style: 'destructive',
+        onPress: async () => {
+          setDeletingId(p.id);
+          try { await deleteDoc(doc(db, 'products', p.id)); }
+          catch { Alert.alert(t('Erreur'), t('Impossible de supprimer.')); }
+          finally { setDeletingId(null); }
+        },
+      },
+    ]);
+  };
 
   const handleDelete = (b: Business) => {
     Alert.alert(t('Supprimer'), `${t('Supprimer')} "${b.name}" ?`, [
@@ -170,6 +204,43 @@ export default function VendorDashboardScreen() {
           <MaterialIcons name="edit" size={18} color={Colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)} disabled={deletingId === item.id}>
+          {deletingId === item.id
+            ? <ActivityIndicator size="small" color="#D32F2F" />
+            : <MaterialIcons name="delete-outline" size={20} color="#D32F2F" />
+          }
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const renderProduct = ({ item }: { item: Product }) => {
+    const cat = PRODUCT_CATEGORIES.find(c => c.label === item.category);
+    const cover = item.photos?.[0] || item.imageUrl;
+    return (
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <TouchableOpacity style={styles.cardInner} onPress={() => router.push(`/product/${item.id}`)} activeOpacity={0.8}>
+          {cover
+            ? <Image source={{ uri: cover }} style={styles.thumb} resizeMode="cover" />
+            : <View style={[styles.thumbPlaceholder, { backgroundColor: (cat?.color || Colors.primary) + '22' }]}>
+                <MaterialIcons name={(cat?.icon as any) || 'sell'} size={28} color={cat?.color || Colors.primary} />
+              </View>
+          }
+          <View style={styles.cardInfo}>
+            <Text style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+            <View style={styles.metaRow}>
+              <MaterialIcons name={(cat?.icon as any) || 'sell'} size={12} color={theme.textSecondary} />
+              <Text style={[styles.cardMeta, { color: theme.textSecondary }]}>{item.category}</Text>
+              <MaterialIcons name="place" size={12} color={theme.textSecondary} />
+              <Text style={[styles.cardMeta, { color: theme.textSecondary }]}>{item.city}</Text>
+            </View>
+            <Text style={[styles.cardMeta, { color: Colors.primary, fontWeight: '400' }]}>{item.price.toLocaleString('fr-FR')} FCFA</Text>
+            <StatusBadge status={item.status || 'pending'} />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.editBtn} onPress={() => router.push(`/vendor/edit-product?id=${item.id}`)}>
+          <MaterialIcons name="edit" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDeleteProduct(item)} disabled={deletingId === item.id}>
           {deletingId === item.id
             ? <ActivityIndicator size="small" color="#D32F2F" />
             : <MaterialIcons name="delete-outline" size={20} color="#D32F2F" />
@@ -265,13 +336,18 @@ export default function VendorDashboardScreen() {
         </View>
       </View>
 
-      {/* ADD BUTTON */}
-      <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/vendor/add-business')} activeOpacity={0.85}>
-        <Text style={styles.addBtnText}>{t('+ Référencer mon entreprise')}</Text>
-      </TouchableOpacity>
+      {/* ADD BUTTONS */}
+      <View style={styles.addBtnRow}>
+        <TouchableOpacity style={[styles.addBtn, { flex: 1 }]} onPress={() => router.push('/vendor/add-business')} activeOpacity={0.85}>
+          <Text style={styles.addBtnText} numberOfLines={1}>{t('+ Référencer mon entreprise')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.addBtn, styles.addProductBtn, { flex: 1 }]} onPress={() => router.push('/vendor/add-product')} activeOpacity={0.85}>
+          <Text style={[styles.addBtnText, { color: '#fff' }]} numberOfLines={1}>{t('+ Vendre un produit')}</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* TABS */}
-      <View style={[styles.tabRow, { borderColor: theme.border }]}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.tabRow, { borderColor: theme.border, flexGrow: 0, flexShrink: 0 }]}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'businesses' && { borderBottomColor: Colors.primary, borderBottomWidth: 2.5 }]}
           onPress={() => setTab('businesses')}
@@ -280,6 +356,17 @@ export default function VendorDashboardScreen() {
             <MaterialIcons name="storefront" size={15} color={tab === 'businesses' ? Colors.primary : theme.textSecondary} />
             <Text style={[styles.tabText, { color: tab === 'businesses' ? Colors.primary : theme.textSecondary }]}>
               {t('Mes entreprises')} ({businesses.length})
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabBtn, tab === 'products' && { borderBottomColor: Colors.cta, borderBottomWidth: 2.5 }]}
+          onPress={() => setTab('products')}
+        >
+          <View style={styles.tabInner}>
+            <MaterialIcons name="sell" size={15} color={tab === 'products' ? Colors.cta : theme.textSecondary} />
+            <Text style={[styles.tabText, { color: tab === 'products' ? Colors.cta : theme.textSecondary }]}>
+              {t('Mes produits')} ({products.length})
             </Text>
           </View>
         </TouchableOpacity>
@@ -294,16 +381,16 @@ export default function VendorDashboardScreen() {
             </Text>
           </View>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* LIST */}
-      {(tab === 'businesses' ? loading : likesLoading) ? (
+      {(tab === 'businesses' ? loading : tab === 'products' ? productsLoading : likesLoading) ? (
         <View style={styles.loadingBox}><ActivityIndicator color={Colors.primary} /></View>
       ) : (
         <FlatList
-          data={tab === 'businesses' ? businesses : likedBusinesses}
+          data={(tab === 'businesses' ? businesses : tab === 'products' ? products : likedBusinesses) as any[]}
           keyExtractor={item => item.id}
-          renderItem={tab === 'businesses' ? renderBusiness : renderLiked}
+          renderItem={(tab === 'businesses' ? renderBusiness : tab === 'products' ? renderProduct : renderLiked) as any}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(true)} tintColor={Colors.primary} colors={[Colors.primary]} />}
@@ -315,6 +402,14 @@ export default function VendorDashboardScreen() {
                 </View>
                 <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('Aucune entreprise soumise')}</Text>
                 <Text style={[styles.emptySub, { color: theme.textSecondary }]}>{t("Appuyez sur \"Référencer\" pour ajouter votre entreprise à l'annuaire.")}</Text>
+              </View>
+            ) : tab === 'products' ? (
+              <View style={styles.empty}>
+                <View style={[styles.emptyIconCircle, { backgroundColor: Colors.cta + '18' }]}>
+                  <MaterialIcons name="sell" size={48} color={Colors.cta} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('Aucun produit soumis')}</Text>
+                <Text style={[styles.emptySub, { color: theme.textSecondary }]}>{t('Appuyez sur "Vendre un produit" pour publier votre première annonce.')}</Text>
               </View>
             ) : (
               <View style={styles.empty}>
@@ -358,10 +453,12 @@ const styles = StyleSheet.create({
   statNum: { fontSize: 20, fontWeight: '400' },
   statLbl: { fontSize: 11, marginTop: 2 },
   statDivider: { width: 1, height: 28, opacity: 0.4 },
-  addBtn: { backgroundColor: Colors.cta, marginHorizontal: 16, marginTop: 14, paddingVertical: 15, borderRadius: 7, alignItems: 'center', elevation: 2, shadowColor: Colors.cta, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 6 },
-  addBtnText: { fontSize: 16, fontWeight: '400', color: '#1A1A1A' },
+  addBtnRow: { flexDirection: 'row', gap: 10, marginHorizontal: 16, marginTop: 14 },
+  addBtn: { backgroundColor: Colors.cta, paddingVertical: 15, borderRadius: 7, alignItems: 'center', elevation: 2, shadowColor: Colors.cta, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 6 },
+  addProductBtn: { backgroundColor: Colors.primary, shadowColor: Colors.primary },
+  addBtnText: { fontSize: 14, fontWeight: '400', color: '#1A1A1A', paddingHorizontal: 4 },
   tabRow: { flexDirection: 'row', marginTop: 14, borderBottomWidth: 1 },
-  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 12 },
+  tabBtn: { alignItems: 'center', paddingVertical: 12, paddingHorizontal: 18 },
   tabInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tabText: { fontSize: 13, fontWeight: '400' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },

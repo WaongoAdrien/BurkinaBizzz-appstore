@@ -30,8 +30,9 @@ registerTranslations({
   'Négociable': 'Negotiable',
   'À propos': 'About',
   'Contacter le vendeur': 'Contact the seller',
+  'Vendeur': 'Seller',
   'Appeler': 'Call',
-  'Négocier sur WhatsApp': 'Negotiate on WhatsApp',
+  'WhatsApp': 'WhatsApp',
   'Partager': 'Share',
   'Téléphone': 'Phone',
   'Ville': 'City',
@@ -244,6 +245,17 @@ export default function ProductDetailScreen() {
               </View>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Contacter le vendeur')}</Text>
             </View>
+            {product.ownerName ? (
+              <View style={styles.vendorRow}>
+                <View style={[styles.vendorAvatar, { backgroundColor: Colors.primary + '22' }]}>
+                  <Text style={[styles.vendorAvatarText, { color: Colors.primary }]}>{product.ownerName[0].toUpperCase()}</Text>
+                </View>
+                <View>
+                  <Text style={[styles.vendorLabel, { color: theme.textSecondary }]}>{t('Vendeur')}</Text>
+                  <Text style={[styles.vendorName, { color: theme.text }]}>{product.ownerName}</Text>
+                </View>
+              </View>
+            ) : null}
             <View style={styles.contactRow}>
               {product.phone && (
                 <TouchableOpacity style={[styles.contactBtn, { backgroundColor: Colors.headerGradient[0] }]} onPress={openPhone}>
@@ -254,7 +266,7 @@ export default function ProductDetailScreen() {
               {whatsappNumber && (
                 <TouchableOpacity style={[styles.contactBtn, { backgroundColor: '#1B5E20' }]} onPress={openWhatsApp}>
                   <Ionicons name="logo-whatsapp" size={20} color="#fff" />
-                  <Text style={styles.contactBtnText}>{t('Négocier sur WhatsApp')}</Text>
+                  <Text style={styles.contactBtnText}>{t('WhatsApp')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -328,9 +340,14 @@ const styles = StyleSheet.create({
   city: { fontSize: 13 },
   likeBtn: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 1, flexShrink: 0 },
   description: { fontSize: 14, lineHeight: 22 },
+  vendorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  vendorAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  vendorAvatarText: { fontSize: 15, fontWeight: '600' },
+  vendorLabel: { fontSize: 11 },
+  vendorName: { fontSize: 14, fontWeight: '400', marginTop: 1 },
   contactRow: { flexDirection: 'row', gap: 10 },
-  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 7, gap: 6 },
-  contactBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
+  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 10, borderRadius: 7, gap: 6, minWidth: 0 },
+  contactBtnText: { color: '#fff', fontSize: 14, fontWeight: '400', flexShrink: 1, textAlign: 'center' },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 7 },
   actionBtnText: { fontSize: 14, fontWeight: '400', color: '#fff' },

@@ -15,7 +15,7 @@ registerTranslations({
   'Parcourir le marché': 'Browse marketplace',
   'Téléphones & Tablettes': 'Phones & Tablets',
   'Électronique': 'Electronics',
-  'Informatique': 'Computers',
+  'Produits Locaux': 'Local Products',
   'Véhicules': 'Vehicles',
   'Mode & Vêtements': 'Fashion & Clothing',
   'Meubles & Maison': 'Furniture & Home',

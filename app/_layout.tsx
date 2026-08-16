@@ -27,6 +27,8 @@ registerTranslations({
   'Catégories de produits': 'Product categories',
   'Marché': 'Marketplace',
   'Produit': 'Product',
+  'Vendre un produit': 'Sell a product',
+  'Modifier le produit': 'Edit product',
 });
 
 const HeaderBackground = () => (
@@ -67,7 +69,9 @@ function RootStack() {
         <Stack.Screen name="settings" options={{ title: t('Paramètres') }} />
         <Stack.Screen name="vendor/dashboard" options={{ title: t('Mon espace') }} />
         <Stack.Screen name="vendor/add-business" options={{ title: t('Ajouter une entreprise') }} />
+        <Stack.Screen name="vendor/add-product" options={{ title: t('Vendre un produit') }} />
         <Stack.Screen name="vendor/edit-business" options={{ title: t("Modifier l'entreprise") }} />
+        <Stack.Screen name="vendor/edit-product" options={{ title: t('Modifier le produit') }} />
         <Stack.Screen name="vendor/pending" options={{ headerShown: false, headerBackTitle: '' }} />
         <Stack.Screen name="admin/index" options={{ title: t('Admin Panel') }} />
         <Stack.Screen name="evenement" options={{ title: t('Événements') }} />

@@ -56,7 +56,7 @@ export const CATEGORIES: CategoryItem[] = [
 export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
   { label: 'Téléphones & Tablettes', icon: 'phone-iphone',      iconFamily: 'MaterialIcons', color: '#F97316' },
   { label: 'Électronique',           icon: 'devices',           iconFamily: 'MaterialIcons', color: '#F59E0B' },
-  { label: 'Informatique',           icon: 'laptop',             iconFamily: 'MaterialIcons', color: '#3B82F6' },
+  { label: 'Produits Locaux',        icon: 'eco',               iconFamily: 'MaterialIcons', color: '#22C55E' },
   { label: 'Véhicules',              icon: 'directions-car',    iconFamily: 'MaterialIcons', color: '#EF4444' },
   { label: 'Mode & Vêtements',       icon: 'checkroom',         iconFamily: 'MaterialIcons', color: '#EC4899' },
   { label: 'Meubles & Maison',       icon: 'chair',             iconFamily: 'MaterialIcons', color: '#8B5CF6' },
