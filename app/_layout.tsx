@@ -24,6 +24,9 @@ registerTranslations({
   'Événements': 'Events',
   'Site touristique': 'Tourist site',
   'Événement': 'Event',
+  'Catégories de produits': 'Product categories',
+  'Marché': 'Marketplace',
+  'Produit': 'Product',
 });
 
 const HeaderBackground = () => (
@@ -49,6 +52,9 @@ function RootStack() {
         <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: '' }} />
         <Stack.Screen name="annuaire" options={{ title: t('Annuaire 🔍') }} />
         <Stack.Screen name="categories" options={{ title: t('Catégories') }} />
+        <Stack.Screen name="product-categories" options={{ title: t('Catégories de produits') }} />
+        <Stack.Screen name="marketplace" options={{ title: t('Marché') }} />
+        <Stack.Screen name="product/[id]" options={{ title: t('Produit'), headerShown: true }} />
         <Stack.Screen name="more" options={{ title: t('Découvrir') }} />
         <Stack.Screen name="tourism-sites" options={{ title: t('Sites touristiques') }} />
         <Stack.Screen name="about-burkina" options={{ title: t('À propos du Burkina Faso'), headerShown: true }} />

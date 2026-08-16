@@ -1,6 +1,6 @@
 // constants/index.ts
 
-import { Category, CategoryItem, City } from '../types/index';
+import { Category, CategoryItem, City, ProductCategoryItem } from '../types/index';
 
 export const Colors = {
   primary: '#2B617C',
@@ -51,6 +51,19 @@ export const CATEGORIES: CategoryItem[] = [
   { label: 'Services',           icon: 'build',                iconFamily: 'MaterialIcons', color: '#10B981' },
   { label: 'Automobile',         icon: 'directions-car',       iconFamily: 'MaterialIcons', color: '#EF4444' },
   { label: 'Autres',             icon: 'more-horiz',           iconFamily: 'MaterialIcons', color: '#6B7280' },
+];
+
+export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
+  { label: 'Téléphones & Tablettes', icon: 'phone-iphone',      iconFamily: 'MaterialIcons', color: '#F97316' },
+  { label: 'Électronique',           icon: 'devices',           iconFamily: 'MaterialIcons', color: '#F59E0B' },
+  { label: 'Informatique',           icon: 'laptop',             iconFamily: 'MaterialIcons', color: '#3B82F6' },
+  { label: 'Véhicules',              icon: 'directions-car',    iconFamily: 'MaterialIcons', color: '#EF4444' },
+  { label: 'Mode & Vêtements',       icon: 'checkroom',         iconFamily: 'MaterialIcons', color: '#EC4899' },
+  { label: 'Meubles & Maison',       icon: 'chair',             iconFamily: 'MaterialIcons', color: '#8B5CF6' },
+  { label: 'Immobilier',             icon: 'home-work',         iconFamily: 'MaterialIcons', color: '#64748B' },
+  { label: 'Loisirs & Sports',       icon: 'sports-soccer',     iconFamily: 'MaterialIcons', color: '#0EA5E9' },
+  { label: 'Bébé & Enfants',         icon: 'child-friendly',    iconFamily: 'MaterialIcons', color: '#10B981' },
+  { label: 'Autres',                 icon: 'more-horiz',        iconFamily: 'MaterialIcons', color: '#6B7280' },
 ];
 
 export const CITIES: City[] = [

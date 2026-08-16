@@ -14,6 +14,8 @@ import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 registerTranslations({
   'Par Catégorie': 'By Category',
   'Voir toutes les catégories': 'Browse all categories',
+  'Produits à vendre': 'Products for sale',
+  'Négociez le prix directement sur WhatsApp': 'Negotiate the price directly on WhatsApp',
   'Applications utiles au Burkina Faso': 'Useful applications in Burkina Faso',
   'Les meilleures apps': 'The best apps for living in and visiting the country',
   'Vous avez une entreprise?': 'Do you have a business?',
@@ -112,6 +114,22 @@ export default function MoreScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Par Catégorie')}</Text>
               <Text style={[styles.categoriesLinkSub, { color: theme.textSecondary }]}>{t('Voir toutes les catégories')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+          </TouchableOpacity>
+
+          {/* MARKETPLACE LINK */}
+          <TouchableOpacity
+            style={[styles.categoriesLink, { backgroundColor: theme.card, borderColor: theme.border }]}
+            onPress={() => router.push('/product-categories')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.categoriesLinkIcon}>
+              <MaterialCommunityIcons name="tag-heart-outline" size={22} color={Colors.cta} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Produits à vendre')}</Text>
+              <Text style={[styles.categoriesLinkSub, { color: theme.textSecondary }]}>{t('Négociez le prix directement sur WhatsApp')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
           </TouchableOpacity>

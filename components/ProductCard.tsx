@@ -8,9 +8,10 @@ import {
 import { useRouter } from 'expo-router';
 import { Product } from '../types/index';
 import { useColorTheme } from '../hooks/useColorTheme';
-import { Colors } from '../constants';
+import { Colors, PRODUCT_CATEGORIES } from '../constants';
 import { useAuth } from '../lib/AuthContext';
 import { likeProduct, unlikeProduct, subscribeLikes } from '../lib/likes';
+import { CategoryIcon } from './CategoryIcon';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
@@ -20,6 +21,7 @@ registerTranslations({
   'Se connecter': 'Sign in',
   'Erreur': 'Error',
   'Impossible de modifier vos favoris.': 'Unable to update your favorites.',
+  'Négociable': 'Negotiable',
 });
 
 interface ProductCardProps {
@@ -40,6 +42,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     return subscribeLikes(user.uid, (ids) => setLiked(ids.has(product.id)));
   }, [user, product.id]);
 
+  const cat = PRODUCT_CATEGORIES.find(c => c.label === product.category);
+  const cover = product.photos?.[0] || product.imageUrl;
+
   const handleLike = async () => {
     if (!user) {
       Alert.alert(t('Connexion requise'), t('Connectez-vous pour sauvegarder des favoris.'), [
@@ -56,7 +61,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         await likeProduct(user.uid, {
           id: product.id,
           name: product.name,
-          imageUrl: product.imageUrl,
+          imageUrl: cover || '',
           price: product.price,
           city: product.city,
           category: product.category,
@@ -75,21 +80,29 @@ export default function ProductCard({ product }: ProductCardProps) {
       onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}
       activeOpacity={0.85}
     >
-      <Image
-        source={product.imageUrl ? { uri: product.imageUrl } : require('../assets/images/placeholder.png')}
-        style={styles.image}
-        resizeMode="cover"
-        fadeDuration={200}
-      />
+      {cover ? (
+        <Image source={{ uri: cover }} style={styles.image} resizeMode="cover" fadeDuration={200} />
+      ) : (
+        <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: (cat?.color || Colors.primary) + '22' }]}>
+          {cat ? (
+            <CategoryIcon iconName={cat.icon} iconFamily={cat.iconFamily} size={36} color={cat.color} />
+          ) : (
+            <Text style={{ fontSize: 32 }}>🛍️</Text>
+          )}
+        </View>
+      )}
 
       {/* Category badge */}
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>{product.category}</Text>
-      </View>
+      {cat && (
+        <View style={[styles.badge, { backgroundColor: cat.color + 'DD' }]}>
+          <CategoryIcon iconName={cat.icon} iconFamily={cat.iconFamily} size={11} color="#fff" />
+          <Text style={styles.badgeText} numberOfLines={1}>{product.category}</Text>
+        </View>
+      )}
 
       {/* Like button */}
       <TouchableOpacity
-        style={[styles.likeBtn, liked && { backgroundColor: '#b39da0c4' }]}
+        style={[styles.likeBtn, liked && { backgroundColor: '#FFEBEE' }]}
         onPress={handleLike}
         disabled={likeLoading}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -105,7 +118,14 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </Text>
         <Text style={[styles.city, { color: theme.textSecondary }]}>📍 {product.city}</Text>
-        <Text style={styles.price}>{product.price.toLocaleString('fr-FR')} FCFA</Text>
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{product.price.toLocaleString('fr-FR')} FCFA</Text>
+          {product.negotiable && (
+            <View style={styles.negoTag}>
+              <Text style={styles.negoTagText}>{t('Négociable')}</Text>
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -120,12 +140,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08, shadowRadius: 6,
   },
   image: { width: '100%', height: 140, backgroundColor: '#E0E0E0' },
+  imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
   badge: {
     position: 'absolute', top: 8, left: 8,
-    backgroundColor: Colors.primary + 'DD',
-    borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3, maxWidth: '80%',
   },
-  badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '400' },
+  badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '400', flexShrink: 1 },
   likeBtn: {
     position: 'absolute', top: 8, right: 8,
     backgroundColor: 'rgba(255,255,255,0.9)',
@@ -136,5 +157,8 @@ const styles = StyleSheet.create({
   info: { padding: 10, gap: 4 },
   name: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
   city: { fontSize: 12 },
-  price: { fontSize: 15, fontWeight: '400', color: Colors.primary, marginTop: 2 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' },
+  price: { fontSize: 15, fontWeight: '400', color: Colors.primary },
+  negoTag: { backgroundColor: '#E8F5E9', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+  negoTagText: { fontSize: 9, fontWeight: '400', color: '#1B5E20' },
 });

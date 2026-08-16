@@ -1,38 +1,25 @@
-// app/marketplace.tsx — MarketplaceScreen
+// app/marketplace.tsx — Marketplace screen: browse products for sale, filterable by category
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  RefreshControl,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
+  View, Text, FlatList, RefreshControl, TextInput,
+  StyleSheet, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  where,
-  Query,
-  DocumentData,
-} from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where, Query, DocumentData } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Product, Category } from '../types/index';
-import { Colors, CATEGORIES } from '../constants';
+import { Product, ProductCategory } from '../types/index';
+import { Colors, PRODUCT_CATEGORIES } from '../constants';
 import { useColorTheme } from '../hooks/useColorTheme';
+import { CategoryIcon } from '../components/CategoryIcon';
+import { ContentContainer } from '../components/ContentContainer';
 import ProductCard from '../components/ProductCard';
-import CategoryBadge from '../components/CategoryBadge';
 import EmptyState from '../components/EmptyState';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
+  'Marché': 'Marketplace',
   'Impossible de charger les produits. Vérifiez votre connexion.': 'Unable to load products. Check your connection.',
   'Erreur de connexion': 'Connection error',
   'Réessayer': 'Retry',
@@ -40,7 +27,7 @@ registerTranslations({
   'produit trouvé': 'product found',
   'produits trouvés': 'products found',
   'dans': 'in',
-  'Chargement du marché...': 'Loading marketplace...',
+  '🌍 Tous': '🌍 All',
   'Aucun produit trouvé': 'No products found',
   'Aucun produit dans': 'No products in',
   'pour le moment.': 'for now.',
@@ -57,10 +44,11 @@ export default function MarketplaceScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    (paramCategory as Category) || null
+  const [activeCategory, setActiveCategory] = useState<ProductCategory | 'Tous'>(
+    (paramCategory as ProductCategory) || 'Tous'
   );
-  const [searchText, setSearchText] = useState('');
+  const [search, setSearch] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
 
   // Real-time Firestore listener
   useEffect(() => {
@@ -69,13 +57,14 @@ export default function MarketplaceScreen() {
 
     let q: Query<DocumentData> = query(
       collection(db, 'products'),
+      where('status', '==', 'approved'),
       orderBy('createdAt', 'desc')
     );
-
-    if (selectedCategory) {
+    if (activeCategory !== 'Tous') {
       q = query(
         collection(db, 'products'),
-        where('category', '==', selectedCategory),
+        where('status', '==', 'approved'),
+        where('category', '==', activeCategory),
         orderBy('createdAt', 'desc')
       );
     }
@@ -83,16 +72,11 @@ export default function MarketplaceScreen() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Product[];
-        setProducts(data);
+        setProducts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Product)));
         setLoading(false);
         setRefreshing(false);
       },
-      (err) => {
-        console.error(err);
+      () => {
         setError(t('Impossible de charger les produits. Vérifiez votre connexion.'));
         setLoading(false);
         setRefreshing(false);
@@ -100,33 +84,18 @@ export default function MarketplaceScreen() {
     );
 
     return unsubscribe;
-  }, [selectedCategory]);
+  }, [activeCategory, retryKey]);
 
   // Client-side search filter
   useEffect(() => {
-    if (!searchText.trim()) {
-      setFiltered(products);
-    } else {
-      const q = searchText.toLowerCase();
-      setFiltered(
-        products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q) ||
-            p.city.toLowerCase().includes(q)
-        )
-      );
-    }
-  }, [products, searchText]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-  }, []);
-
-  const handleCategorySelect = (cat: Category | null) => {
-    setSelectedCategory(cat);
-    setSearchText('');
-  };
+    if (!search.trim()) { setFiltered(products); return; }
+    const s = search.toLowerCase();
+    setFiltered(products.filter(p =>
+      p.name.toLowerCase().includes(s) ||
+      p.description?.toLowerCase().includes(s) ||
+      p.city?.toLowerCase().includes(s)
+    ));
+  }, [products, search]);
 
   if (error) {
     return (
@@ -134,14 +103,10 @@ export default function MarketplaceScreen() {
         colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
         style={styles.container}
       >
-        <EmptyState
-          icon="📵"
-          title={t('Erreur de connexion')}
-          subtitle={error}
-        />
+        <EmptyState icon="📵" title={t('Erreur de connexion')} subtitle={error} />
         <TouchableOpacity
           style={[styles.retryBtn, { backgroundColor: Colors.primary }]}
-          onPress={() => setSelectedCategory(selectedCategory)}
+          onPress={() => setRetryKey(k => k + 1)}
         >
           <Text style={{ color: '#fff', fontWeight: '400' }}>{t('Réessayer')}</Text>
         </TouchableOpacity>
@@ -154,147 +119,115 @@ export default function MarketplaceScreen() {
       colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
       style={styles.container}
     >
-      {/* SEARCH BAR */}
-      <View style={[styles.searchWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={[styles.searchInput, { color: theme.text }]}
-          placeholder={t('Rechercher un produit...')}
-          placeholderTextColor={theme.textSecondary}
-          value={searchText}
-          onChangeText={setSearchText}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-        {searchText.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchText('')}>
-            <Text style={{ color: theme.textSecondary, fontSize: 18, paddingRight: 4 }}>✕</Text>
-          </TouchableOpacity>
-        )}
+      <Stack.Screen options={{ title: t('Marché'), headerBackVisible: true, headerBackTitle: '' }} />
+
+      <View style={{ width: '100%', alignItems: 'center' }}>
+        <View style={{ width: '100%', maxWidth: 600 }}>
+          {/* SEARCH */}
+          <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholder={t('Rechercher un produit...')}
+              placeholderTextColor={theme.textSecondary}
+              value={search}
+              onChangeText={setSearch}
+              autoCorrect={false}
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch('')}>
+                <Text style={{ color: theme.textSecondary, fontSize: 16, paddingHorizontal: 4 }}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* CATEGORY FILTER */}
+          <FlatList
+            horizontal
+            data={['Tous', ...PRODUCT_CATEGORIES.map(c => c.label)] as (ProductCategory | 'Tous')[]}
+            keyExtractor={item => item}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+            renderItem={({ item }) => {
+              const active = activeCategory === item;
+              const cat = PRODUCT_CATEGORIES.find(c => c.label === item);
+              const activeColor = cat ? cat.color : Colors.primary;
+              return (
+                <TouchableOpacity
+                  style={[styles.filterChip, active && { backgroundColor: activeColor }]}
+                  onPress={() => setActiveCategory(item)}
+                  activeOpacity={0.85}
+                >
+                  {cat && <CategoryIcon iconName={cat.icon} iconFamily={cat.iconFamily} size={14} color={active ? '#fff' : activeColor} />}
+                  <Text style={[styles.filterChipText, { color: active ? '#fff' : theme.text }]}>
+                    {item === 'Tous' ? t('🌍 Tous') : item}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+
+          {/* RESULTS COUNT */}
+          {!loading && (
+            <Text style={[styles.resultCount, { color: theme.textSecondary }]}>
+              {filtered.length} {t(filtered.length !== 1 ? 'produits trouvés' : 'produit trouvé')}
+              {activeCategory !== 'Tous' ? ` ${t('dans')} "${activeCategory}"` : ''}
+            </Text>
+          )}
+        </View>
       </View>
 
-      {/* CATEGORY FILTER */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}
-      >
-        <CategoryBadge
-          category={selectedCategory}
-          onSelect={handleCategorySelect}
-          showAll={true}
-        />
-      </ScrollView>
-
-      {/* RESULTS COUNT */}
-      {!loading && (
-        <Text style={[styles.resultCount, { color: theme.textSecondary }]}>
-          {filtered.length} {t(filtered.length !== 1 ? 'produits trouvés' : 'produit trouvé')}
-          {selectedCategory ? ` ${t('dans')} "${t(selectedCategory)}"` : ''}
-        </Text>
-      )}
-
-      {/* PRODUCT LIST */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
-            {t('Chargement du marché...')}
-          </Text>
         </View>
       ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ProductCard product={item} />}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={Colors.primary}
-              colors={[Colors.primary]}
-            />
-          }
-          ListEmptyComponent={
-            <EmptyState
-              icon="🛒"
-              title={t('Aucun produit trouvé')}
-              subtitle={
-                selectedCategory
-                  ? `${t('Aucun produit dans')} "${t(selectedCategory)}" ${t('pour le moment.')}`
-                  : t('Le marché est vide pour le moment. Revenez bientôt!')
-              }
-            />
-          }
-          // Performance optimizations for low bandwidth
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={6}
-          windowSize={10}
-          initialNumToRender={4}
-        />
+        <View style={{ flex: 1, width: '100%', alignItems: 'center' }}>
+          <FlatList
+            style={{ width: '100%', maxWidth: 600 }}
+            data={filtered}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <ProductCard product={item} />}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(true)} tintColor={Colors.primary} />
+            }
+            ListEmptyComponent={
+              <EmptyState
+                icon="🛒"
+                title={t('Aucun produit trouvé')}
+                subtitle={
+                  activeCategory !== 'Tous'
+                    ? `${t('Aucun produit dans')} "${activeCategory}" ${t('pour le moment.')}`
+                    : t('Le marché est vide pour le moment. Revenez bientôt!')
+                }
+              />
+            }
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={6}
+            windowSize={10}
+            initialNumToRender={4}
+          />
+        </View>
       )}
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 7,
-    borderWidth: 1.5,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  searchIcon: {
-    fontSize: 16,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    padding: 0,
-  },
-  categoryScroll: {
-    maxHeight: 56,
-  },
-  resultCount: {
-    fontSize: 12,
-    paddingHorizontal: 16,
-    paddingBottom: 6,
-    fontWeight: '400',
-  },
-  listContent: {
-    paddingHorizontal: 10,
-    paddingBottom: 24,
-  },
-  row: {
-    justifyContent: 'space-between',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-  },
-  retryBtn: {
-    marginHorizontal: 32,
-    padding: 14,
-    borderRadius: 7,
-    alignItems: 'center',
-    marginBottom: 32,
-  },
+  container: { flex: 1 },
+  searchBox: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, marginTop: 12, marginBottom: 4, borderRadius: 7, borderWidth: 1.5, paddingHorizontal: 4, paddingVertical: 8 },
+  searchIcon: { fontSize: 16, marginRight: 8, marginLeft: 8 },
+  searchInput: { flex: 1, fontSize: 15, paddingVertical: 4 },
+  filterRow: { paddingHorizontal: 12, paddingVertical: 8, gap: 6 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 34, paddingHorizontal: 12, borderRadius: 7, backgroundColor: '#F5F5F5' },
+  filterChipText: { fontSize: 12, fontWeight: '400', lineHeight: 16 },
+  resultCount: { fontSize: 12, paddingHorizontal: 12, paddingBottom: 4 },
+  listContent: { paddingHorizontal: 10, paddingBottom: 24 },
+  row: { justifyContent: 'space-between' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  retryBtn: { marginHorizontal: 32, padding: 14, borderRadius: 7, alignItems: 'center', marginBottom: 32 },
 });

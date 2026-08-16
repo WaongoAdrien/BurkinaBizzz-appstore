@@ -62,11 +62,37 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  category: Category;
+  category: ProductCategory;
   city: City;
-  imageUrl?: string;
+  photos?: string[];       // array of image URLs
+  imageUrl?: string;       // legacy single-image field, first photo used as fallback
   price: number;
+  negotiable?: boolean;    // NEW: shown as "Négociable" badge, invites WhatsApp bargaining
+  phone?: string;
+  whatsapp?: string;
+  ownerId?: string;
+  ownerName?: string;
+  status?: 'pending' | 'approved';
   createdAt?: string | Date;
+}
+
+export type ProductCategory =
+  | 'Téléphones & Tablettes'
+  | 'Électronique'
+  | 'Informatique'
+  | 'Véhicules'
+  | 'Mode & Vêtements'
+  | 'Meubles & Maison'
+  | 'Immobilier'
+  | 'Loisirs & Sports'
+  | 'Bébé & Enfants'
+  | 'Autres';
+
+export interface ProductCategoryItem {
+  label: ProductCategory;
+  icon: string;
+  iconFamily: 'Ionicons' | 'MaterialCommunityIcons' | 'MaterialIcons';
+  color: string;
 }
 
 

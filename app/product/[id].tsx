@@ -1,107 +1,94 @@
-// app/business/[id].tsx — Business Detail Screen
+// app/product/[id].tsx — Product Detail Screen
 
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Image,
+  View, Text, ScrollView, TouchableOpacity, Image, Share,
   StyleSheet, Linking, Alert, ActivityIndicator, FlatList, Dimensions,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../lib/AuthContext';
-import { useLikes } from '../../hooks/useLikes';
-import { Business } from '../../types/index2';
-import { Colors, CATEGORIES, WHATSAPP_GREETING } from '../../constants';
+import { Product } from '../../types';
+import { Colors, PRODUCT_CATEGORIES } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
+import { CategoryIcon } from '../../components/CategoryIcon';
+import { ContentContainer } from '../../components/ContentContainer';
+import { likeProduct, unlikeProduct, subscribeLikes } from '../../lib/likes';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 
 registerTranslations({
-  'Entreprise introuvable': 'Business not found',
+  'Produit introuvable': 'Product not found',
   'Erreur': 'Error',
-  'Impossible douvrir Facebook.': 'Unable to open Facebook.',
-  'Impossible d ouvrir la page.': 'Unable to open the page.',
-  "Impossible douvrir Google Maps.": 'Unable to open Google Maps.',
+  "Impossible d'ouvrir.": 'Unable to open.',
   'Connexion requise': 'Login required',
   'Connectez-vous pour sauvegarder des favoris.': 'Log in to save favorites.',
   'Se connecter': 'Log in',
   'Annuler': 'Cancel',
+  'Négociable': 'Negotiable',
   'À propos': 'About',
-  'Contactez nous': 'Contact us',
+  'Contacter le vendeur': 'Contact the seller',
   'Appeler': 'Call',
-  'WhatsApp': 'WhatsApp',
-  'Réseaux sociaux': 'Social media',
-  'Facebook': 'Facebook',
-  'Instagram': 'Instagram',
-  'Localisation': 'Location',
-  'Ouvrir': 'Open',
+  'Négocier sur WhatsApp': 'Negotiate on WhatsApp',
+  'Partager': 'Share',
   'Téléphone': 'Phone',
   'Ville': 'City',
+  'Catégorie': 'Category',
+  'Trouvé sur BurkinaBizz': 'Found on BurkinaBizz',
 });
 
 const { width } = Dimensions.get('window');
 
-export default function BusinessDetailScreen() {
+export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useColorTheme();
   const router = useRouter();
   const { user } = useAuth();
-  const { isLiked, toggleLike } = useLikes(user?.uid);
   const { t } = useTranslation();
 
-  const [business, setBusiness] = useState<Business | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [liked, setLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    getDoc(doc(db, 'businesses', id)).then(snap => {
-      if (snap.exists()) setBusiness({ id: snap.id, ...snap.data() } as Business);
+    getDoc(doc(db, 'products', id)).then(snap => {
+      if (snap.exists()) setProduct({ id: snap.id, ...snap.data() } as Product);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [id]);
 
-  const openPhone = () => {
-    if (!business?.phone) return;
-    Linking.openURL(`tel:${business.phone}`);
-  };
+  useEffect(() => {
+    if (!user) return;
+    return subscribeLikes(user.uid, (ids) => setLiked(ids.has(id!)));
+  }, [user, id]);
 
-  // Businesses created after strictWhatsapp was introduced only show the button
-  // when an explicit WhatsApp number was provided — no more assuming phone == WhatsApp.
-  // Older businesses (no strictWhatsapp flag) keep the legacy phone fallback.
-  const whatsappNumber = business?.whatsapp || (!business?.strictWhatsapp ? business?.phone : null);
+  const openPhone = () => product?.phone && Linking.openURL(`tel:${product.phone}`);
+
+  const whatsappNumber = product?.whatsapp || product?.phone;
 
   const openWhatsApp = () => {
-    if (!whatsappNumber) return;
+    if (!product || !whatsappNumber) return;
     const num = whatsappNumber.replace(/\D/g, '');
-    Linking.openURL(`https://wa.me/${num}?text=${encodeURIComponent(WHATSAPP_GREETING)}`);
+    const priceText = `${product.price.toLocaleString('fr-FR')} FCFA`;
+    const message = product.negotiable
+      ? `Bonjour, je suis intéressé(e) par "${product.name}" à ${priceText} sur BurkinaBizz 🇧🇫. Le prix est-il négociable?`
+      : `Bonjour, je suis intéressé(e) par "${product.name}" à ${priceText} sur BurkinaBizz 🇧🇫.`;
+    Linking.openURL(`https://wa.me/${num}?text=${encodeURIComponent(message)}`);
   };
 
-  const openFacebook = () => {
-    if (!business?.facebook) return;
-    const url = business.facebook.startsWith('http') ? business.facebook : `https://facebook.com/${business.facebook}`;
-    Linking.openURL(url).catch(() => Alert.alert(t('Erreur'), t('Impossible douvrir Facebook.')));
-  };
-
-  const openInstagram = () => {
-    if (!business?.instagram) return;
-    const handle = business.instagram.replace('@', '');
-    Linking.openURL(`https://instagram.com/${handle}`).catch(() => Alert.alert(t('Erreur'), t('Impossible d ouvrir la page.')));
-  };
-
-  const openMaps = () => {
-    if (!business?.location) return;
-    const { latitude, longitude, address } = business.location;
-    let url = '';
-    if (latitude && longitude) {
-      // Coords → Google Maps directions
-      url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-    } else if (address) {
-      // Address → Google Maps search
-      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    }
-    if (url) Linking.openURL(url).catch(() => Alert.alert(t('Erreur'), t("Impossible douvrir Google Maps.")));
+  const handleShare = async () => {
+    if (!product) return;
+    try {
+      await Share.share({
+        message: `${product.name}\n${product.price.toLocaleString('fr-FR')} FCFA • ${product.city}\n\n${t('Trouvé sur BurkinaBizz')}`,
+        title: product.name,
+      });
+    } catch {}
   };
 
   const handleLike = async () => {
@@ -110,10 +97,22 @@ export default function BusinessDetailScreen() {
         [{ text: t('Se connecter'), onPress: () => router.push('/auth') }, { text: t('Annuler'), style: 'cancel' }]);
       return;
     }
-    if (!business) return;
+    if (!product) return;
     setLikeLoading(true);
-    try { await toggleLike(business as any); }
-    finally { setLikeLoading(false); }
+    try {
+      if (liked) {
+        await unlikeProduct(user.uid, product.id);
+      } else {
+        await likeProduct(user.uid, {
+          id: product.id,
+          name: product.name,
+          imageUrl: photos[0] || '',
+          price: product.price,
+          city: product.city,
+          category: product.category,
+        });
+      }
+    } finally { setLikeLoading(false); }
   };
 
   if (loading) return (
@@ -125,178 +124,170 @@ export default function BusinessDetailScreen() {
     </LinearGradient>
   );
 
-  if (!business) return (
+  if (!product) return (
     <LinearGradient
       colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
       style={styles.center}
     >
       <Text style={{ fontSize: 48 }}>😕</Text>
-      <Text style={[styles.errorText, { color: theme.text }]}>{t('Entreprise introuvable')}</Text>
+      <Text style={[styles.errorText, { color: theme.text }]}>{t('Produit introuvable')}</Text>
     </LinearGradient>
   );
 
-  const cat = CATEGORIES.find(c => c.label === business.category);
-  const liked = isLiked(business.id);
-  const photos = business.photos?.length ? business.photos : business.coverPhoto ? [business.coverPhoto] : [];
+  const cat = PRODUCT_CATEGORIES.find(c => c.label === product.category);
+  const photos = product.photos?.length ? product.photos : product.imageUrl ? [product.imageUrl] : [];
 
   return (
-    <LinearGradient
-      colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
-      style={{ flex: 1 }}
-    >
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <>
+      <Stack.Screen options={{ title: product.name, headerShown: true, headerBackVisible: true, headerBackTitle: '' }} />
+      <LinearGradient
+        colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
+        style={{ flex: 1 }}
+      >
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-      {/* PHOTO GALLERY */}
-      {photos.length > 0 ? (
-        <View>
-          <FlatList
-            data={photos}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(_, i) => String(i)}
-            onMomentumScrollEnd={(e) => {
-              setActivePhoto(Math.round(e.nativeEvent.contentOffset.x / width));
-            }}
-            renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
-            )}
-          />
-          {photos.length > 1 && (
-            <View style={styles.dotRow}>
-              {photos.map((_, i) => (
-                <View key={i} style={[styles.dot, { backgroundColor: i === activePhoto ? '#fff' : 'rgba(255,255,255,0.4)' }]} />
-              ))}
-            </View>
-          )}
-        </View>
-      ) : (
-        <View style={[styles.photoPlaceholder, { backgroundColor: (cat?.color || Colors.primary) + '22' }]}>
-          <Text style={{ fontSize: 64 }}>{cat?.icon || '🏢'}</Text>
-        </View>
-      )}
-
-      <View style={styles.body}>
-        {/* NAME + LIKE */}
-        <View style={styles.titleRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.name, { color: theme.text }]}>{business.name}</Text>
-            <View style={styles.metaRow}>
-              <View style={[styles.catBadge, { backgroundColor: (cat?.color || Colors.primary) + '22' }]}>
-                <Text style={[styles.catBadgeText, { color: cat?.color || Colors.primary }]}>
-                  {cat?.icon} {business.category}
-                </Text>
+        {/* PHOTO GALLERY */}
+        <View style={{ width: '100%', alignItems: 'center' }}>
+          <View style={{ width: '100%', maxWidth: width }}>
+            {photos.length > 0 ? (
+              <View style={{ width: '100%', height: 280, position: 'relative' }}>
+                <FlatList
+                  data={photos}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(_, i) => String(i)}
+                  onMomentumScrollEnd={e => setActivePhoto(Math.round(e.nativeEvent.contentOffset.x / width))}
+                  renderItem={({ item }) => (
+                    <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
+                  )}
+                />
+                {photos.length > 1 && (
+                  <View style={styles.dotRow}>
+                    {photos.map((_, i) => (
+                      <View key={i} style={[styles.dot, { backgroundColor: i === activePhoto ? '#fff' : 'rgba(255,255,255,0.4)' }]} />
+                    ))}
+                  </View>
+                )}
               </View>
-              <Text style={[styles.city, { color: theme.textSecondary }]}>📍 {business.city}</Text>
-            </View>
+            ) : (
+              <View style={[styles.photoPlaceholder, { backgroundColor: (cat?.color || Colors.primary) + '22' }]}>
+                {cat ? (
+                  <CategoryIcon iconName={cat.icon} iconFamily={cat.iconFamily} size={72} color={cat.color} />
+                ) : (
+                  <Text style={{ fontSize: 64 }}>🛍️</Text>
+                )}
+              </View>
+            )}
           </View>
-          <TouchableOpacity
-            style={[styles.likeBtn, { backgroundColor: liked ? '#FFEBEE' : theme.surface, borderColor: theme.border }]}
-            onPress={handleLike}
-            disabled={likeLoading}
-          >
-            {likeLoading
-              ? <ActivityIndicator size="small" color={Colors.primary} />
-              : <Text style={{ fontSize: 24 }}>{liked ? '❤️' : '🤍'}</Text>
-            }
-          </TouchableOpacity>
         </View>
 
-        {/* DESCRIPTION */}
-        <View style={[styles.section, { borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('À propos')}</Text>
-          <Text style={[styles.description, { color: theme.textSecondary }]}>{business.description}</Text>
-        </View>
-
-        {/* CONTACT BUTTONS */}
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Contactez nous')}</Text>
-        <View style={styles.contactRow}>
-          {business.phone && (
-            <TouchableOpacity style={[styles.contactBtn, { backgroundColor: Colors.primary }]} onPress={openPhone}>
-              <Text style={styles.contactIcon}>📞</Text>
-              <Text style={styles.contactBtnText}>{t('Appeler')}</Text>
-            </TouchableOpacity>
-          )}
-          {whatsappNumber && (
-            <TouchableOpacity style={[styles.contactBtn, { backgroundColor: '#285b3b' }]} onPress={openWhatsApp}>
-              <Text style={styles.contactIcon}>💬</Text>
-              <Text style={styles.contactBtnText}>{t('WhatsApp')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* SOCIAL MEDIA */}
-        {(business.facebook || business.instagram) && (
-          <>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Réseaux sociaux')}</Text>
-            <View style={styles.socialRow}>
-              {business.facebook && (
-                <TouchableOpacity
-                  style={[styles.socialBtn, { backgroundColor: '#1877F2' }]}
-                  onPress={openFacebook}
-                >
-                  <Text style={styles.socialBtnText}>🔵 {t('Facebook')}</Text>
-                </TouchableOpacity>
-              )}
-              {business.instagram && (
-                <TouchableOpacity
-                  style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}
-                  onPress={openInstagram}
-                >
-                  <Text style={styles.socialBtnText}>📸 {t('Instagram')}</Text>
-                </TouchableOpacity>
-              )}
+        <ContentContainer maxWidth={width} style={styles.body}>
+          {/* NAME + LIKE */}
+          <View style={styles.titleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.name, { color: theme.text }]}>{product.name}</Text>
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>{product.price.toLocaleString('fr-FR')} FCFA</Text>
+                {product.negotiable && (
+                  <View style={styles.negoTag}>
+                    <Text style={styles.negoTagText}>{t('Négociable')}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.metaRow}>
+                {cat && (
+                  <View style={[styles.catBadge, { backgroundColor: cat.color + '22' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <CategoryIcon iconName={cat.icon} iconFamily={cat.iconFamily} size={14} color={cat.color} />
+                      <Text style={[styles.catBadgeText, { color: cat.color }]}>{product.category}</Text>
+                    </View>
+                  </View>
+                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="location" size={14} color={theme.textSecondary} />
+                  <Text style={[styles.city, { color: theme.textSecondary }]}>{product.city}</Text>
+                </View>
+              </View>
             </View>
-          </>
-        )}
-
-        {/* LOCATION */}
-        {business.location && (business.location.address || business.location.latitude) && (
-          <>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Localisation')}</Text>
             <TouchableOpacity
-              style={[styles.mapsBtn, { borderColor: theme.border }]}
-              onPress={openMaps}
+              style={[styles.likeBtn, { backgroundColor: liked ? '#FFEBEE' : theme.surface, borderColor: theme.border }, styles.cardShadow]}
+              onPress={handleLike} disabled={likeLoading}
               activeOpacity={0.8}
             >
-              <View style={{ flex: 1 }}>
-                {business.location.address && (
-                  <Text style={[styles.mapsBtnAddress, { color: theme.text }]} numberOfLines={2}>
-                    📍 {business.location.address}
-                  </Text>
-                )}
-                {business.location.latitude && (
-                  <Text style={[styles.mapsBtnCoords, { color: theme.textSecondary }]}>
-                    {business.location.latitude.toFixed(4)}, {business.location.longitude?.toFixed(4)}
-                  </Text>
-                )}
-              </View>
-              <View style={styles.mapsBtnIcon}>
-                <Text style={{ fontSize: 22 }}>🗺️</Text>
-                <Text style={styles.mapsBtnIconText}>{t('Ouvrir')}</Text>
-              </View>
+              {likeLoading ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              ) : (
+                <Ionicons name={liked ? "heart" : "heart-outline"} size={28} color={liked ? "#D32F2F" : theme.textSecondary} />
+              )}
             </TouchableOpacity>
-          </>
-        )}
+          </View>
 
-        {/* CONTACT INFO */}
-        <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {business.phone && <InfoRow icon="📞" label={t('Téléphone')} value={business.phone} theme={theme} />}
-          {business.whatsapp && <InfoRow icon="💬" label={t('WhatsApp')} value={business.whatsapp} theme={theme} />}
-          {business.facebook && <InfoRow icon="🔵" label={t('Facebook')} value={business.facebook} theme={theme} />}
-          {business.instagram && <InfoRow icon="📸" label={t('Instagram')} value={business.instagram} theme={theme} />}
-          <InfoRow icon="📍" label={t('Ville')} value={business.city} theme={theme} />
-        </View>
-      </View>
-    </ScrollView>
-    </LinearGradient>
+          {/* DESCRIPTION */}
+          {product.description ? (
+            <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={[styles.sectionIconBadge, { backgroundColor: Colors.primary + '22' }]}>
+                  <Ionicons name="document-text-outline" size={16} color={Colors.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('À propos')}</Text>
+              </View>
+              <Text style={[styles.description, { color: theme.textSecondary }]}>{product.description}</Text>
+            </View>
+          ) : null}
+
+          {/* CONTACT / BARGAIN */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={[styles.sectionIconBadge, { backgroundColor: '#1096c3' + '22' }]}>
+                <Ionicons name="call" size={16} color="#1096c3" />
+              </View>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Contacter le vendeur')}</Text>
+            </View>
+            <View style={styles.contactRow}>
+              {product.phone && (
+                <TouchableOpacity style={[styles.contactBtn, { backgroundColor: Colors.headerGradient[0] }]} onPress={openPhone}>
+                  <Ionicons name="call" size={20} color="#fff" />
+                  <Text style={styles.contactBtnText}>{t('Appeler')}</Text>
+                </TouchableOpacity>
+              )}
+              {whatsappNumber && (
+                <TouchableOpacity style={[styles.contactBtn, { backgroundColor: '#1B5E20' }]} onPress={openWhatsApp}>
+                  <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+                  <Text style={styles.contactBtnText}>{t('Négocier sur WhatsApp')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* SHARE */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: Colors.headerGradient[0] }]} onPress={handleShare} activeOpacity={0.85}>
+              <Ionicons name="share-outline" size={18} color="#fff" />
+              <Text style={styles.actionBtnText}>{t('Partager')}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* INFO CARD */}
+          <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {product.phone && <InfoRow iconName="call" label={t('Téléphone')} value={product.phone} theme={theme} />}
+            {product.whatsapp && <InfoRow iconName="logo-whatsapp" label="WhatsApp" value={product.whatsapp} theme={theme} />}
+            <InfoRow iconName="pricetag" label={t('Catégorie')} value={product.category} theme={theme} />
+            <InfoRow iconName="location" label={t('Ville')} value={product.city} theme={theme} />
+          </View>
+        </ContentContainer>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+      </LinearGradient>
+    </>
   );
 }
 
-function InfoRow({ icon, label, value, theme }: { icon: string; label: string; value: string; theme: any }) {
+function InfoRow({ iconName, label, value, theme }: { iconName: string; label: string; value: string; theme: any }) {
   return (
     <View style={infoStyles.row}>
-      <Text style={infoStyles.icon}>{icon}</Text>
+      <Ionicons name={iconName as any} size={18} color={theme.textSecondary} />
       <Text style={[infoStyles.label, { color: theme.textSecondary }]}>{label}</Text>
       <Text style={[infoStyles.value, { color: theme.text }]} numberOfLines={1}>{value}</Text>
     </View>
@@ -305,7 +296,6 @@ function InfoRow({ icon, label, value, theme }: { icon: string; label: string; v
 
 const infoStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 10 },
-  icon: { fontSize: 16, width: 24 },
   label: { fontSize: 13, width: 90 },
   value: { flex: 1, fontSize: 13, fontWeight: '400', textAlign: 'right' },
 });
@@ -314,32 +304,35 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   errorText: { fontSize: 16, fontWeight: '400' },
+  cardShadow: {
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
+  },
+  sectionCard: { borderRadius: 10, padding: 16, marginTop: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionIconBadge: { width: 28, height: 28, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
+  sectionTitle: { fontSize: 16, fontWeight: '400' },
   photo: { height: 280 },
   photoPlaceholder: { height: 220, alignItems: 'center', justifyContent: 'center' },
   dotRow: { position: 'absolute', bottom: 12, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  body: { padding: 16, gap: 16 },
+  body: { padding: 16 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  name: { fontSize: 22, fontWeight: '500', lineHeight: 28 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' },
+  name: { fontSize: 22, fontWeight: '600', lineHeight: 28 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' },
+  price: { fontSize: 19, fontWeight: '600', color: Colors.primary },
+  negoTag: { backgroundColor: '#E8F5E9', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
+  negoTagText: { fontSize: 11, fontWeight: '400', color: '#1B5E20' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' },
   catBadge: { borderRadius: 5, paddingHorizontal: 10, paddingVertical: 4 },
   catBadgeText: { fontSize: 12, fontWeight: '400' },
   city: { fontSize: 13 },
   likeBtn: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 1, flexShrink: 0 },
-  section: { borderTopWidth: 1, paddingTop: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '400', marginBottom: 10 },
   description: { fontSize: 14, lineHeight: 22 },
   contactRow: { flexDirection: 'row', gap: 10 },
-  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 7, gap: 6 },
-  contactIcon: { fontSize: 18 },
-  contactBtnText: { color: '#fff', fontSize: 15, fontWeight: '400' },
-  socialRow: { flexDirection: 'row', gap: 10 },
-  socialBtn: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 7 },
-  socialBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
-  infoCard: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14 },
-  mapsBtn: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderRadius: 8, padding: 14, gap: 12, marginBottom: 4 },
-  mapsBtnAddress: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
-  mapsBtnCoords: { fontSize: 11, marginTop: 2 },
-  mapsBtnIcon: { alignItems: 'center', gap: 2 },
-  mapsBtnIconText: { fontSize: 11, color: '#1976D2', fontWeight: '400' },
+  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 7, gap: 6 },
+  contactBtnText: { color: '#fff', fontSize: 14, fontWeight: '400' },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 7 },
+  actionBtnText: { fontSize: 14, fontWeight: '400', color: '#fff' },
+  infoCard: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, marginTop: 16 },
 });
