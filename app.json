@@ -2,7 +2,7 @@
   "expo": {
     "name": "BurkinaBizz",
     "slug": "burkinabizz",
-    "version": "2.3.7",
+    "version": "2.3.8",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "burkinabizz",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.burkinabizz.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSCameraUsageDescription": "BurkinaBizz a besoin de la camera pour prendre des photos.",
         "NSPhotoLibraryUsageDescription": "BurkinaBizz a besoin de vos photos pour importer des images.",
