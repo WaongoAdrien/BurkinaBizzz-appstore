@@ -16,7 +16,7 @@ import { containsProfanity } from '../../lib/profanityFilter';
 import { useAuth } from '../../lib/AuthContext';
 import { Colors, PRODUCT_CATEGORIES, CITIES } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
-import { ProductCategory, City } from '../../types';
+import { ProductCategory, City, StockStatus } from '../../types';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 
 registerTranslations({
@@ -35,6 +35,12 @@ registerTranslations({
   'Description *': 'Description *',
   "Décrivez l'état, les caractéristiques...": 'Describe the condition, features...',
   '💰 Prix': '💰 Price',
+  '📦 Stock': '📦 Stock',
+  'En stock': 'In stock',
+  'Rupture de stock': 'Out of stock',
+  'Vendu': 'Sold',
+  'Quantité en stock': 'Quantity in stock',
+  'Ex: 5 (optionnel)': 'Ex: 5 (optional)',
   'Prix (FCFA) *': 'Price (FCFA) *',
   'Ex: 150000': 'Ex: 150000',
   'Prix négociable': 'Negotiable price',
@@ -133,6 +139,11 @@ function PickerModal({ visible, title, items, selected, onSelect, onClose, cardC
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_PHOTOS = 5;
+const STOCK_OPTIONS: { value: StockStatus; label: string; color: string }[] = [
+  { value: 'in_stock', label: 'En stock', color: '#2E7D32' },
+  { value: 'out_of_stock', label: 'Rupture de stock', color: '#D32F2F' },
+  { value: 'sold', label: 'Vendu', color: '#6B7280' },
+];
 
 export default function EditProductScreen() {
   const router = useRouter();
@@ -147,6 +158,8 @@ export default function EditProductScreen() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [negotiable, setNegotiable] = useState(false);
+  const [stockStatus, setStockStatus] = useState<StockStatus>('in_stock');
+  const [stockQuantity, setStockQuantity] = useState('');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
 
@@ -179,6 +192,8 @@ export default function EditProductScreen() {
       setDescription(d.description || '');
       setPrice(d.price ? String(d.price) : '');
       setNegotiable(!!d.negotiable);
+      setStockStatus(d.stockStatus || 'in_stock');
+      setStockQuantity(typeof d.stockQuantity === 'number' ? String(d.stockQuantity) : '');
       setPhone(d.phone || '');
       setWhatsapp(d.whatsapp || '');
       setExistingPhotos(d.photos || (d.imageUrl ? [d.imageUrl] : []));
@@ -276,6 +291,8 @@ export default function EditProductScreen() {
         description: description.trim(),
         price: parseInt(price.replace(/\D/g, ''), 10),
         negotiable,
+        stockStatus,
+        stockQuantity: stockStatus === 'in_stock' && stockQuantity.trim() ? parseInt(stockQuantity.replace(/\D/g, ''), 10) : null,
         phone: phone.trim(),
         whatsapp: whatsapp.trim() || null,
         photos: allPhotos,
@@ -353,6 +370,28 @@ export default function EditProductScreen() {
               thumbColor={negotiable ? Colors.primary : '#f4f3f4'}
             />
           </View>
+        </View>
+
+        <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.formSection, { color: Colors.primary }]}>{t('📦 Stock')}</Text>
+          <View style={styles.stockRow}>
+            {STOCK_OPTIONS.map(opt => {
+              const active = stockStatus === opt.value;
+              return (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.stockChip, { borderColor: opt.color, backgroundColor: active ? opt.color : '#fff' }]}
+                  onPress={() => setStockStatus(opt.value)}
+                >
+                  <Text style={{ color: active ? '#fff' : opt.color, fontSize: 13, fontWeight: '400' }}>{t(opt.label)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {stockStatus === 'in_stock' && (
+            <Field label={t('Quantité en stock')} value={stockQuantity} onChangeText={setStockQuantity}
+              placeholder={t('Ex: 5 (optionnel)')} keyboardType="number-pad" optional {...fp} />
+          )}
         </View>
 
         <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -445,6 +484,8 @@ const styles = StyleSheet.create({
   selector: { borderWidth: 2, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 13, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   hint: { fontSize: 12, marginBottom: 12, lineHeight: 18 },
   negoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
+  stockRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  stockChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 7, borderWidth: 1.5 },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   photoThumbBox: { width: THUMB, height: THUMB, borderRadius: 6, overflow: 'hidden', position: 'relative' },
   photoThumb: { width: '100%', height: '100%' },

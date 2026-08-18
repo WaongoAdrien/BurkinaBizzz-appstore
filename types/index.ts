@@ -73,8 +73,12 @@ export interface Product {
   ownerId?: string;
   ownerName?: string;
   status?: 'pending' | 'approved';
+  stockStatus?: StockStatus; // NEW: defaults to 'in_stock' when unset
+  stockQuantity?: number;    // NEW: optional "X en stock" count, only meaningful when in_stock
   createdAt?: string | Date;
 }
+
+export type StockStatus = 'in_stock' | 'out_of_stock' | 'sold';
 
 export type ProductCategory =
   | 'Téléphones & Tablettes'

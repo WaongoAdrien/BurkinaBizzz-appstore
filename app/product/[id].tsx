@@ -12,6 +12,7 @@ import { db } from '../../lib/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../lib/AuthContext';
 import { Product } from '../../types';
+import { getStockBadge } from '../../lib/productStock';
 import { Colors, PRODUCT_CATEGORIES } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { CategoryIcon } from '../../components/CategoryIcon';
@@ -28,6 +29,9 @@ registerTranslations({
   'Se connecter': 'Log in',
   'Annuler': 'Cancel',
   'Négociable': 'Negotiable',
+  'En stock': 'In stock',
+  'Rupture de stock': 'Out of stock',
+  'Vendu': 'Sold',
   'À propos': 'About',
   'Contacter le vendeur': 'Contact the seller',
   'Vendeur': 'Seller',
@@ -198,6 +202,14 @@ export default function ProductDetailScreen() {
                     <Text style={styles.negoTagText}>{t('Négociable')}</Text>
                   </View>
                 )}
+                {(() => {
+                  const stock = getStockBadge(product);
+                  return (
+                    <View style={[styles.stockTag, { backgroundColor: stock.color + '18' }]}>
+                      <Text style={[styles.stockTagText, { color: stock.color }]}>{t(stock.label)}</Text>
+                    </View>
+                  );
+                })()}
               </View>
               <View style={styles.metaRow}>
                 {cat && (
@@ -329,6 +341,8 @@ const styles = StyleSheet.create({
   price: { fontSize: 19, fontWeight: '600', color: Colors.primary },
   negoTag: { backgroundColor: '#E8F5E9', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
   negoTagText: { fontSize: 11, fontWeight: '400', color: '#1B5E20' },
+  stockTag: { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
+  stockTagText: { fontSize: 11, fontWeight: '600' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' },
   catBadge: { borderRadius: 5, paddingHorizontal: 10, paddingVertical: 4 },
   catBadgeText: { fontSize: 12, fontWeight: '400' },
