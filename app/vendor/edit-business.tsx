@@ -31,7 +31,7 @@ registerTranslations({
   'Accès refusé': 'Access denied',
   'Vous ne pouvez modifier que vos propres entreprises.': 'You can only edit your own businesses.',
   'Maximum atteint': 'Maximum reached',
-  'Maximum 5 photos.': 'Maximum 5 photos.',
+  'Maximum 10 photos.': 'Maximum 10 photos.',
   'Ajouter des photos': 'Add photos',
   '📷 Prendre une photo': '📷 Take a photo',
   '🖼️ Choisir depuis la galerie': '🖼️ Choose from gallery',
@@ -143,7 +143,7 @@ function PickerModal({ visible, title, items, selected, onSelect, onClose, cardC
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 10;
 
 export default function EditBusinessScreen() {
   const router = useRouter();

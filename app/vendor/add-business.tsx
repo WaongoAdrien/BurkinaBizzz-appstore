@@ -32,7 +32,7 @@ registerTranslations({
   'Localisation': 'Location',
   'Photos': 'Photos',
   'Maximum atteint': 'Maximum reached',
-  'Maximum 5 photos.': 'Maximum 5 photos.',
+  'Maximum 10 photos.': 'Maximum 10 photos.',
   'Ajouter des photos': 'Add photos',
   '📷 Prendre une photo': '📷 Take a photo',
   '🖼️ Galerie': '🖼️ Gallery',
@@ -72,7 +72,7 @@ registerTranslations({
   'GPS:': 'GPS:',
   'Modifier': 'Edit',
   'Ajouter une localisation': 'Add a location',
-  "Jusqu'à 5 photos. La première = couverture.": 'Up to 5 photos. The first one = cover.',
+  "Jusqu'à 10 photos. La première = couverture.": 'Up to 10 photos. The first one = cover.',
   'Couverture': 'Cover',
   'Ajouter': 'Add',
   'Upload:': 'Upload:',
@@ -181,7 +181,7 @@ function PickerModal({ visible, title, items, selected, onSelect, onClose, cardC
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 10;
 const STEPS = ['Informations', 'Contact', 'Horaires', 'Réseaux', 'Localisation', 'Photos'];
 
 export default function AddBusinessScreen() {
