@@ -15,6 +15,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 import { EventItem, normalizeUrl } from '../evenement';
 import { EditContentModal } from '../../components/EditContentModal';
+import { formatEventDateRange } from '../../lib/eventDate';
 
 registerTranslations({
   'Date': 'Date',
@@ -126,7 +127,7 @@ export default function EventDetailScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Date')}</Text>
               </View>
-              <Text style={[styles.scheduleText, { color: theme.text }]}>{event.date}</Text>
+              <Text style={[styles.scheduleText, { color: theme.text }]}>{formatEventDateRange(event.date, event.endDate)}</Text>
             </View>
           ) : null}
 

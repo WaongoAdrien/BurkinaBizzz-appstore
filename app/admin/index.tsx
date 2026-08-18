@@ -20,6 +20,8 @@ import { Colors } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 import LocationPicker from '../../components/Locationpicker';
+import { DatePickerModal } from '../../components/DatePickerModal';
+import { formatEventDate } from '../../lib/eventDate';
 
 registerTranslations({
   'Position GPS (pour la carte)': 'GPS position (for the map)',
@@ -129,6 +131,9 @@ registerTranslations({
   'Catégorie *': 'Category *',
   'Lieu *': 'Location *',
   'Date': 'Date',
+  'Date de fin (optionnel)': 'End date (optional)',
+  'Aucune': 'None',
+  'Retirer la date de fin': 'Remove end date',
   'Téléphone': 'Phone',
   'Lien carte (Google Maps)': 'Map link (Google Maps)',
   'Page Facebook': 'Facebook page',
@@ -215,6 +220,7 @@ interface ContentFormState {
   photos: string;
   schedule: string;
   date: string;
+  endDate: string;
   description: string;
   mapLink: string;
   facebook: string;
@@ -226,7 +232,7 @@ interface ContentFormState {
 
 const emptyContentForm = (kind: ContentKind): ContentFormState => ({
   visible: true, kind, editId: null,
-  name: '', category: '', location: '', phone: '', image: '', photos: '', schedule: '', date: '', description: '',
+  name: '', category: '', location: '', phone: '', image: '', photos: '', schedule: '', date: '', endDate: '', description: '',
   mapLink: '', facebook: '', website: '',
   latitude: null, longitude: null,
   hotels: [],
@@ -349,6 +355,8 @@ export default function AdminScreen() {
   const [contentForm, setContentForm] = useState<ContentFormState>({ ...emptyContentForm('events'), visible: false });
   const [savingContent, setSavingContent] = useState(false);
   const [locationPickerVisible, setLocationPickerVisible] = useState(false);
+  const [eventDatePickerVisible, setEventDatePickerVisible] = useState(false);
+  const [eventEndDatePickerVisible, setEventEndDatePickerVisible] = useState(false);
 
   // Useful numbers & official sites (About Burkina)
   const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('numbers');
@@ -473,7 +481,7 @@ export default function AdminScreen() {
     phone: item.phone || '', image: item.image || '',
     photos: Array.isArray(item.photos) ? item.photos.join(', ') : '',
     schedule: item.schedule || '',
-    date: item.date || '', description: item.description || '',
+    date: item.date || '', endDate: item.endDate || '', description: item.description || '',
     mapLink: item.mapLink || '', facebook: item.facebook || '', website: item.website || '',
     latitude: typeof item.latitude === 'number' ? item.latitude : null,
     longitude: typeof item.longitude === 'number' ? item.longitude : null,
@@ -509,7 +517,7 @@ export default function AdminScreen() {
   };
 
   const saveContent = async () => {
-    const { kind, editId, name, category, location, phone, image, photos, schedule, date, description, mapLink, facebook, website, latitude, longitude, hotels } = contentForm;
+    const { kind, editId, name, category, location, phone, image, photos, schedule, date, endDate, description, mapLink, facebook, website, latitude, longitude, hotels } = contentForm;
     if (!name.trim() || !category.trim() || !location.trim()) {
       Alert.alert(t('Erreur'), t('Le nom, la catégorie et le lieu sont requis.'));
       return;
@@ -530,6 +538,7 @@ export default function AdminScreen() {
     }
     if (kind === 'attractions' && schedule.trim()) payload.schedule = schedule.trim();
     if (kind === 'events' && date.trim()) payload.date = date.trim();
+    if (kind === 'events') payload.endDate = endDate.trim() || null;
     if (mapLink.trim()) payload.mapLink = mapLink.trim();
     if (facebook.trim()) payload.facebook = facebook.trim();
     if (website.trim()) payload.website = website.trim();
@@ -2083,13 +2092,37 @@ export default function AdminScreen() {
               {contentForm.kind === 'events' && (
                 <>
                   <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Date')}</Text>
-                  <TextInput
-                    style={[styles.fieldInput, { borderColor: theme.border, color: theme.text }]}
-                    value={contentForm.date}
-                    onChangeText={v => setContentForm(prev => ({ ...prev, date: v }))}
-                    placeholder={t('Ex : 12 septembre 2026')}
-                    placeholderTextColor={theme.textSecondary}
-                  />
+                  <TouchableOpacity
+                    style={[styles.fieldInput, { borderColor: theme.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+                    onPress={() => setEventDatePickerVisible(true)}
+                  >
+                    <Text style={{ color: contentForm.date ? theme.text : theme.textSecondary, fontSize: 14 }}>
+                      {contentForm.date ? formatEventDate(contentForm.date) : t('Ex : 12 septembre 2026')}
+                    </Text>
+                    <MaterialIcons name="event" size={18} color={theme.textSecondary} />
+                  </TouchableOpacity>
+
+                  <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Date de fin (optionnel)')}</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <TouchableOpacity
+                      style={[styles.fieldInput, { flex: 1, borderColor: theme.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+                      onPress={() => setEventEndDatePickerVisible(true)}
+                    >
+                      <Text style={{ color: contentForm.endDate ? theme.text : theme.textSecondary, fontSize: 14 }}>
+                        {contentForm.endDate ? formatEventDate(contentForm.endDate) : t('Aucune')}
+                      </Text>
+                      <MaterialIcons name="event" size={18} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                    {contentForm.endDate ? (
+                      <TouchableOpacity
+                        style={[styles.clearDateBtn, { borderColor: theme.border }]}
+                        onPress={() => setContentForm(prev => ({ ...prev, endDate: '' }))}
+                        accessibilityLabel={t('Retirer la date de fin')}
+                      >
+                        <MaterialIcons name="close" size={18} color={theme.textSecondary} />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                 </>
               )}
               <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Téléphone')}</Text>
@@ -2694,6 +2727,24 @@ export default function AdminScreen() {
         onClose={() => setLocationPickerVisible(false)}
         theme={theme}
       />
+
+      {/* DATE PICKER FOR EVENT DATE */}
+      <DatePickerModal
+        visible={eventDatePickerVisible}
+        initialValue={contentForm.date}
+        onConfirm={(iso) => setContentForm(prev => ({ ...prev, date: iso }))}
+        onClose={() => setEventDatePickerVisible(false)}
+        theme={theme}
+      />
+
+      {/* DATE PICKER FOR EVENT END DATE */}
+      <DatePickerModal
+        visible={eventEndDatePickerVisible}
+        initialValue={contentForm.endDate || contentForm.date}
+        onConfirm={(iso) => setContentForm(prev => ({ ...prev, endDate: iso }))}
+        onClose={() => setEventEndDatePickerVisible(false)}
+        theme={theme}
+      />
       </LinearGradient>
     </SafeAreaView>
   );
@@ -2716,6 +2767,7 @@ const styles = StyleSheet.create({
   modalBtnText: { fontSize: 15, fontWeight: '400' },
   fieldLabel: { fontSize: 12, fontWeight: '400', marginBottom: 5, marginTop: 10 },
   fieldInput: { borderWidth: 1.5, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
+  clearDateBtn: { width: 42, height: 42, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   fieldInputMultiline: { minHeight: 80, textAlignVertical: 'top' },
   gpsPickBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

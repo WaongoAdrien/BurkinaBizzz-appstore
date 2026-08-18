@@ -7,8 +7,11 @@ import {
   StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
+import { MaterialIcons } from '@expo/vector-icons';
 import { db } from '../lib/firebase';
 import { Colors } from '../constants';
+import { DatePickerModal } from './DatePickerModal';
+import { formatEventDate } from '../lib/eventDate';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
@@ -17,6 +20,9 @@ registerTranslations({
   'Catégorie *': 'Category *',
   'Lieu *': 'Location *',
   'Date': 'Date',
+  'Date de fin (optionnel)': 'End date (optional)',
+  'Aucune': 'None',
+  'Retirer la date de fin': 'Remove end date',
   'Téléphone': 'Phone',
   'Lien carte (Google Maps)': 'Map link (Google Maps)',
   'Page Facebook': 'Facebook page',
@@ -40,6 +46,7 @@ export interface EditableContent {
   location: string;
   phone?: string;
   date?: string;
+  endDate?: string;
   mapLink?: string;
   facebook?: string;
   website?: string;
@@ -66,6 +73,7 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [phone, setPhone] = useState('');
   const [mapLink, setMapLink] = useState('');
   const [facebook, setFacebook] = useState('');
@@ -75,6 +83,9 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
   const [schedule, setSchedule] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const modalTheme = { card: '#fff', text: '#1A1A1A', textSecondary: '#8A8A8A', border: '#E5E7EB' };
 
   useEffect(() => {
     if (!item) return;
@@ -82,6 +93,7 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
     setCategory(item.category || '');
     setLocation(item.location || '');
     setDate(item.date || '');
+    setEndDate(item.endDate || '');
     setPhone(item.phone || '');
     setMapLink(item.mapLink || '');
     setFacebook(item.facebook || '');
@@ -109,6 +121,7 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
     payload.image = image.trim() || null;
     if (kind === 'events') {
       payload.date = date.trim() || null;
+      payload.endDate = endDate.trim() || null;
     }
     if (kind === 'attractions') {
       payload.photos = photos.trim() ? photos.split(',').map(u => u.trim()).filter(Boolean) : null;
@@ -128,6 +141,7 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
   };
 
   return (
+    <>
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.overlay}>
@@ -146,7 +160,31 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
               {kind === 'events' && (
                 <>
                   <Text style={styles.label}>{t('Date')}</Text>
-                  <TextInput style={styles.input} value={date} onChangeText={setDate} />
+                  <TouchableOpacity style={[styles.input, styles.dateInput]} onPress={() => setShowDatePicker(true)}>
+                    <Text style={{ color: date ? '#1A1A1A' : '#8A8A8A', fontSize: 14 }}>
+                      {date ? formatEventDate(date) : t('Date')}
+                    </Text>
+                    <MaterialIcons name="event" size={18} color="#8A8A8A" />
+                  </TouchableOpacity>
+
+                  <Text style={styles.label}>{t('Date de fin (optionnel)')}</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <TouchableOpacity style={[styles.input, styles.dateInput, { flex: 1 }]} onPress={() => setShowEndDatePicker(true)}>
+                      <Text style={{ color: endDate ? '#1A1A1A' : '#8A8A8A', fontSize: 14 }}>
+                        {endDate ? formatEventDate(endDate) : t('Aucune')}
+                      </Text>
+                      <MaterialIcons name="event" size={18} color="#8A8A8A" />
+                    </TouchableOpacity>
+                    {endDate ? (
+                      <TouchableOpacity
+                        style={styles.clearDateBtn}
+                        onPress={() => setEndDate('')}
+                        accessibilityLabel={t('Retirer la date de fin')}
+                      >
+                        <MaterialIcons name="close" size={18} color="#8A8A8A" />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                 </>
               )}
 
@@ -191,6 +229,21 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
         </View>
       </KeyboardAvoidingView>
     </Modal>
+    <DatePickerModal
+      visible={showDatePicker}
+      initialValue={date}
+      onConfirm={setDate}
+      onClose={() => setShowDatePicker(false)}
+      theme={modalTheme}
+    />
+    <DatePickerModal
+      visible={showEndDatePicker}
+      initialValue={endDate || date}
+      onConfirm={setEndDate}
+      onClose={() => setShowEndDatePicker(false)}
+      theme={modalTheme}
+    />
+    </>
   );
 }
 
@@ -201,6 +254,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: '400', marginBottom: 5, marginTop: 10, color: '#8A8A8A' },
   input: { borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 7, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#1A1A1A' },
   multiline: { minHeight: 70, textAlignVertical: 'top' },
+  dateInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  clearDateBtn: { width: 40, height: 40, borderRadius: 7, borderWidth: 1.5, borderColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
   cancelBtn: { flex: 1, borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 7, paddingVertical: 13, alignItems: 'center' },
   cancelText: { fontSize: 15, fontWeight: '400', color: '#5A5A5A' },
