@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Image, Share,
-  StyleSheet, Linking, Alert, ActivityIndicator, FlatList, Dimensions,
+  StyleSheet, Linking, Alert, ActivityIndicator, FlatList, Dimensions, Modal, StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -56,6 +56,8 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
 
@@ -163,8 +165,13 @@ export default function ProductDetailScreen() {
                   showsHorizontalScrollIndicator={false}
                   keyExtractor={(_, i) => String(i)}
                   onMomentumScrollEnd={e => setActivePhoto(Math.round(e.nativeEvent.contentOffset.x / width))}
-                  renderItem={({ item }) => (
-                    <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
+                  renderItem={({ item, index }) => (
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => { setViewerIndex(index); setShowImageViewer(true); }}
+                    >
+                      <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
+                    </TouchableOpacity>
                   )}
                 />
                 {photos.length > 1 && (
@@ -299,6 +306,49 @@ export default function ProductDetailScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
       </LinearGradient>
+
+      {/* FULL-SCREEN IMAGE VIEWER */}
+      {photos.length > 0 && (
+        <Modal
+          visible={showImageViewer}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowImageViewer(false)}
+        >
+          <View style={styles.imageViewerContainer}>
+            <StatusBar barStyle="light-content" backgroundColor="#000" />
+
+            <TouchableOpacity
+              style={styles.imageViewerClose}
+              onPress={() => setShowImageViewer(false)}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+
+            <FlatList
+              data={photos}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(_, i) => String(i)}
+              initialScrollIndex={viewerIndex}
+              getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+              onMomentumScrollEnd={e => setViewerIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+              renderItem={({ item }) => (
+                <Image source={{ uri: item }} style={[styles.imageViewerPhoto, { width }]} resizeMode="contain" />
+              )}
+            />
+
+            {photos.length > 1 && (
+              <View style={styles.imageViewerDotRow}>
+                {photos.map((_, i) => (
+                  <View key={i} style={[styles.dot, { backgroundColor: i === viewerIndex ? '#fff' : 'rgba(255,255,255,0.4)' }]} />
+                ))}
+              </View>
+            )}
+          </View>
+        </Modal>
+      )}
     </>
   );
 }
@@ -363,4 +413,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   infoCard: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, marginTop: 16 },
+  imageViewerContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
+  imageViewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  imageViewerPhoto: { height: '100%' },
+  imageViewerDotRow: { position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
 });
