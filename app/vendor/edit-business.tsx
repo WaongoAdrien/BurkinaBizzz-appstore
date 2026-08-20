@@ -164,7 +164,7 @@ export default function EditBusinessScreen() {
   const [instagram, setInstagram] = useState('');
   const [website, setWebsite] = useState('');
   const [priority, setPriority] = useState<number>(0);
-  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours());
+  const [openingHours, setOpeningHours] = useState<OpeningHours | null>(defaultOpeningHours());
   const [location, setLocation] = useState<BusinessLocation | undefined>(undefined);
 
   // Existing remote photo URLs
@@ -206,7 +206,7 @@ export default function EditBusinessScreen() {
       setInstagram(d.instagram || '');
       setWebsite(d.website || '');
       setPriority(d.priority || 0);
-      setOpeningHours(d.openingHours || defaultOpeningHours());
+      setOpeningHours(d.openingHours || null);
       setExistingPhotos(d.photos || (d.coverPhoto ? [d.coverPhoto] : []));
       if (d.location) setLocation(d.location);
     }).finally(() => setFetchLoading(false));

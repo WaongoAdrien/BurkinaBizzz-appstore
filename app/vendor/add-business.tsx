@@ -202,7 +202,7 @@ export default function AddBusinessScreen() {
   const [instagram, setInstagram] = useState('');
   const [website, setWebsite] = useState('');
   const [photoUris, setPhotoUris] = useState<string[]>([]);
-  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours());
+  const [openingHours, setOpeningHours] = useState<OpeningHours | null>(defaultOpeningHours());
   const [location, setLocation] = useState<BusinessLocation | undefined>(undefined);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
 

@@ -18,6 +18,8 @@ registerTranslations({
   'Copier ces horaires ?': 'Copy these hours?',
   'Ces horaires seront appliqués à tous les jours de la semaine.': 'These hours will be applied to every day of the week.',
   'Copier': 'Copy',
+  'Je ne connais pas les horaires': "I don't know the hours",
+  "Aucun horaire ne sera affiché sur la fiche de l'entreprise.": 'No hours will be shown on the business listing.',
 });
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -77,8 +79,8 @@ function TimePickerModal({ visible, initialValue, onConfirm, onClose, theme }: {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
-  value: OpeningHours;
-  onChange: (v: OpeningHours) => void;
+  value: OpeningHours | null;
+  onChange: (v: OpeningHours | null) => void;
   theme: any;
 }
 
@@ -86,6 +88,7 @@ export function OpeningHoursEditor({ value, onChange, theme }: Props) {
   const { t } = useTranslation();
   const [picking, setPicking] = useState<{ day: keyof OpeningHours; field: 'open' | 'close' } | null>(null);
 
+  const hoursUnknown = value === null;
   const hours = value ?? defaultOpeningHours();
 
   const setDay = (dayKey: keyof OpeningHours, next: DayHours) => {
@@ -113,7 +116,22 @@ export function OpeningHoursEditor({ value, onChange, theme }: Props) {
 
   return (
     <View>
-      {DAY_ORDER.map(dayKey => {
+      <View style={[styles.unknownRow, { borderColor: theme.border }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.unknownLabel, { color: theme.text }]}>{t('Je ne connais pas les horaires')}</Text>
+          <Text style={[styles.unknownSub, { color: theme.textSecondary }]}>
+            {t("Aucun horaire ne sera affiché sur la fiche de l'entreprise.")}
+          </Text>
+        </View>
+        <Switch
+          value={hoursUnknown}
+          onValueChange={(v) => onChange(v ? null : defaultOpeningHours())}
+          trackColor={{ false: '#CBD5E1', true: '#EF9A9A' }}
+          thumbColor={hoursUnknown ? '#C62828' : '#f4f3f4'}
+        />
+      </View>
+
+      {!hoursUnknown && DAY_ORDER.map(dayKey => {
         const day = hours[dayKey];
         return (
           <View key={dayKey} style={[styles.dayRow, { borderColor: theme.border }]}>
@@ -175,6 +193,9 @@ export function OpeningHoursEditor({ value, onChange, theme }: Props) {
 }
 
 const styles = StyleSheet.create({
+  unknownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 14, marginBottom: 4, borderBottomWidth: 1 },
+  unknownLabel: { fontSize: 14, fontWeight: '400' },
+  unknownSub: { fontSize: 11, marginTop: 2, lineHeight: 15 },
   dayRow: { borderBottomWidth: 1, paddingVertical: 10 },
   dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 4 },
   dayLabel: { fontSize: 14, fontWeight: '400' },
