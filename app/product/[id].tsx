@@ -4,11 +4,16 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Image, Share,
   StyleSheet, Linking, Alert, ActivityIndicator, FlatList, Dimensions, Modal, StatusBar,
+  TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  doc, getDoc, collection, query, orderBy,
+  onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp,
+} from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { containsProfanity } from '../../lib/profanityFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../lib/AuthContext';
 import { Product } from '../../types';
@@ -42,15 +47,92 @@ registerTranslations({
   'Ville': 'City',
   'Catégorie': 'Category',
   'Trouvé sur BurkinaBizz': 'Found on BurkinaBizz',
+  'Utilisateur': 'User',
+  'Note requise': 'Rating required',
+  'Veuillez sélectionner une note.': 'Please select a rating.',
+  '⚠️ Langage inapproprié': '⚠️ Inappropriate language',
+  'Votre avis contient des mots inappropriés. Merci de reformuler poliment et de le soumettre à nouveau.':
+    'Your review contains inappropriate language. Please rephrase politely and resubmit.',
+  '✅ Avis modifié!': '✅ Review updated!',
+  'Votre avis a été mis à jour.': 'Your review has been updated.',
+  '✅ Avis publié!': '✅ Review posted!',
+  'Merci pour votre retour.': 'Thank you for your feedback.',
+  "Impossible de publier l'avis.": 'Unable to post the review.',
+  'Supprimer votre avis?': 'Delete your review?',
+  'Supprimer': 'Delete',
+  'Impossible de supprimer.': 'Unable to delete.',
+  'Avis sur le vendeur': 'Seller reviews',
+  'avis': 'reviews',
+  'Modifier mon avis': 'Edit my review',
+  'Laisser un avis': 'Write a review',
+  'Aucun avis pour le moment. Soyez le premier!': 'No reviews yet. Be the first!',
+  'Note *': 'Rating *',
+  'Commentaire (optionnel)': 'Comment (optional)',
+  'Partagez votre expérience...': 'Share your experience...',
+  'Publier': 'Post',
 });
 
 const { width, height } = Dimensions.get('window');
+
+// ── Star Rating ─────────────────────────────────────────────────────────────
+function StarRating({ rating, size = 20, onPress }: { rating: number; size?: number; onPress?: (r: number) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map(star => (
+        <TouchableOpacity key={star} onPress={() => onPress?.(star)} disabled={!onPress} activeOpacity={0.7}>
+          <Text style={{ fontSize: size, color: star <= rating ? '#FFA726' : '#E0E0E0' }}>★</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// ── Review Card ────────────────────────────────────────────────────────────
+function ReviewCard({ review, isOwn, onDelete, theme }: { review: any; isOwn: boolean; onDelete: () => void; theme: any }) {
+  const { t, language } = useTranslation();
+  const date = review.createdAt?.toDate?.() ?? new Date(review.createdAt ?? 0);
+  const dateLocale = language === 'en' ? 'en-GB' : 'fr-FR';
+  return (
+    <View style={[rvStyles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={rvStyles.header}>
+        <View style={[rvStyles.avatar, { backgroundColor: Colors.primary + '33' }]}>
+          <Text style={[rvStyles.avatarText, { color: Colors.primary }]}>{(review.userName || 'U')[0].toUpperCase()}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[rvStyles.name, { color: theme.text }]}>{review.userName || t('Utilisateur')}</Text>
+          <Text style={[rvStyles.date, { color: theme.textSecondary }]}>{date.toLocaleDateString(dateLocale)}</Text>
+        </View>
+        <StarRating rating={review.rating} size={14} />
+        {isOwn && (
+          <TouchableOpacity onPress={onDelete} style={rvStyles.deleteBtn}>
+            <Ionicons name="trash-outline" size={16} color="#D32F2F" />
+          </TouchableOpacity>
+        )}
+      </View>
+      {review.comment ? <Text style={[rvStyles.comment, { color: theme.textSecondary }]}>{review.comment}</Text> : null}
+    </View>
+  );
+}
+
+const rvStyles = StyleSheet.create({
+  card: {
+    borderRadius: 7, borderWidth: 1, padding: 12, marginBottom: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontWeight: '400', fontSize: 15 },
+  name: { fontSize: 13, fontWeight: '400' },
+  date: { fontSize: 11, marginTop: 1 },
+  comment: { fontSize: 13, lineHeight: 19, marginTop: 4 },
+  deleteBtn: { padding: 4 },
+});
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useColorTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { t } = useTranslation();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -60,6 +142,14 @@ export default function ProductDetailScreen() {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
+
+  // Seller reviews
+  const [sellerReviews, setSellerReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [myRating, setMyRating] = useState(0);
+  const [myComment, setMyComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -73,6 +163,22 @@ export default function ProductDetailScreen() {
     if (!user) return;
     return subscribeLikes(user.uid, (ids) => setLiked(ids.has(id!)));
   }, [user, id]);
+
+  // Real-time seller reviews
+  useEffect(() => {
+    if (!product?.ownerId) return;
+    const q = query(collection(db, 'sellerRatings', product.ownerId, 'items'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, snap => {
+      setSellerReviews(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setReviewsLoading(false);
+    });
+  }, [product?.ownerId]);
+
+  const avgSellerRating = sellerReviews.length
+    ? Math.round((sellerReviews.reduce((s, r) => s + r.rating, 0) / sellerReviews.length) * 10) / 10
+    : 0;
+
+  const myExistingReview = sellerReviews.find(r => r.userId === user?.uid);
 
   const openPhone = () => product?.phone && Linking.openURL(`tel:${product.phone}`);
 
@@ -120,6 +226,62 @@ export default function ProductDetailScreen() {
         });
       }
     } finally { setLikeLoading(false); }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user) {
+      Alert.alert(t('Connexion requise'), '', [{ text: t('Se connecter'), onPress: () => router.push('/auth') }, { text: t('Annuler'), style: 'cancel' }]);
+      return;
+    }
+    if (!product?.ownerId) return;
+    if (myRating === 0) { Alert.alert(t('Note requise'), t('Veuillez sélectionner une note.')); return; }
+    if (containsProfanity(myComment)) {
+      Alert.alert(
+        t('⚠️ Langage inapproprié'),
+        t('Votre avis contient des mots inappropriés. Merci de reformuler poliment et de le soumettre à nouveau.')
+      );
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      if (myExistingReview) {
+        await updateDoc(doc(db, 'sellerRatings', product.ownerId, 'items', myExistingReview.id), {
+          rating: myRating,
+          comment: myComment.trim() || null,
+        });
+        Alert.alert(t('✅ Avis modifié!'), t('Votre avis a été mis à jour.'));
+      } else {
+        await addDoc(collection(db, 'sellerRatings', product.ownerId, 'items'), {
+          userId: user.uid,
+          userName: userProfile?.name || user.email || t('Utilisateur'),
+          rating: myRating,
+          comment: myComment.trim() || null,
+          createdAt: serverTimestamp(),
+        });
+        Alert.alert(t('✅ Avis publié!'), t('Merci pour votre retour.'));
+      }
+      setShowReviewModal(false);
+      setMyRating(0);
+      setMyComment('');
+    } catch (e: any) {
+      Alert.alert(t('Erreur'), e?.message || t("Impossible de publier l'avis."));
+    } finally { setSubmittingReview(false); }
+  };
+
+  const handleDeleteReview = async (review: any) => {
+    if (!product?.ownerId) return;
+    Alert.alert(t('Supprimer votre avis?'), '', [
+      { text: t('Annuler'), style: 'cancel' },
+      {
+        text: t('Supprimer'), style: 'destructive', onPress: async () => {
+          try {
+            await deleteDoc(doc(db, 'sellerRatings', product.ownerId!, 'items', review.id));
+          } catch {
+            Alert.alert(t('Erreur'), t('Impossible de supprimer.'));
+          }
+        },
+      },
+    ]);
   };
 
   if (loading) return (
@@ -301,6 +463,62 @@ export default function ProductDetailScreen() {
             <InfoRow iconName="pricetag" label={t('Catégorie')} value={product.category} theme={theme} />
             <InfoRow iconName="location" label={t('Ville')} value={product.city} theme={theme} />
           </View>
+
+          {/* ── SELLER REVIEWS ──────────────────────────────────────────── */}
+          <View style={styles.reviewsHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 2 }]}>
+                {t('Avis sur le vendeur')} ({sellerReviews.length})
+              </Text>
+              {sellerReviews.length > 0 && <StarRating rating={Math.round(avgSellerRating)} size={16} />}
+            </View>
+            <TouchableOpacity
+              style={styles.addReviewBtn}
+              onPress={() => {
+                if (!user) {
+                  Alert.alert(t('Connexion requise'), '', [
+                    { text: t('Se connecter'), onPress: () => router.push('/auth') },
+                    { text: t('Annuler'), style: 'cancel' },
+                  ]);
+                  return;
+                }
+                if (myExistingReview) {
+                  setMyRating(myExistingReview.rating);
+                  setMyComment(myExistingReview.comment || '');
+                }
+                setShowReviewModal(true);
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="create-outline" size={16} color="#fff" />
+                <Text style={styles.addReviewBtnText}>
+                  {myExistingReview ? t('Modifier mon avis') : t('Laisser un avis')}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {reviewsLoading ? (
+            <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />
+          ) : sellerReviews.length === 0 ? (
+            <View style={[styles.emptyReviews, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Ionicons name="chatbubbles-outline" size={40} color={theme.textSecondary} />
+              <Text style={{ color: theme.textSecondary, fontSize: 13, textAlign: 'center' }}>
+                {t('Aucun avis pour le moment. Soyez le premier!')}
+              </Text>
+            </View>
+          ) : (
+            <View style={{ marginTop: 12 }}>
+              {sellerReviews.map(r => (
+                <ReviewCard
+                  key={r.id} review={r}
+                  isOwn={r.userId === user?.uid}
+                  onDelete={() => handleDeleteReview(r)}
+                  theme={theme}
+                />
+              ))}
+            </View>
+          )}
         </ContentContainer>
 
         <View style={{ height: 40 }} />
@@ -350,6 +568,39 @@ export default function ProductDetailScreen() {
           </View>
         </Modal>
       )}
+
+      {/* ── REVIEW MODAL ──────────────────────────────────────────────────── */}
+      <Modal visible={showReviewModal} animationType="slide" transparent onRequestClose={() => setShowReviewModal(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalSheet, { backgroundColor: theme.card }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <Ionicons name="create-outline" size={24} color={theme.text} />
+                <Text style={[styles.modalTitle, { color: theme.text, marginBottom: 0 }]}>{t('Laisser un avis')}</Text>
+              </View>
+              <Text style={[styles.modalSub, { color: theme.textSecondary }]}>{t('Note *')}</Text>
+              <StarRating rating={myRating} size={36} onPress={setMyRating} />
+              <Text style={[styles.modalSub, { color: theme.textSecondary, marginTop: 16 }]}>{t('Commentaire (optionnel)')}</Text>
+              <TextInput
+                style={[styles.reviewInput, { borderColor: theme.border, backgroundColor: theme.surface, color: theme.text }]}
+                placeholder={t('Partagez votre expérience...')}
+                placeholderTextColor={theme.textSecondary}
+                value={myComment} onChangeText={setMyComment}
+                multiline numberOfLines={4} maxLength={400}
+                textAlignVertical="top"
+              />
+              <View style={styles.modalBtns}>
+                <TouchableOpacity style={[styles.modalCancelBtn, { borderColor: theme.border }]} onPress={() => { setShowReviewModal(false); setMyRating(0); setMyComment(''); }}>
+                  <Text style={[styles.modalCancelText, { color: theme.textSecondary }]}>{t('Annuler')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalSubmitBtn, submittingReview && { opacity: 0.6 }]} onPress={handleSubmitReview} disabled={submittingReview}>
+                  {submittingReview ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSubmitText}>{t('Publier')}</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </>
   );
 }
@@ -418,4 +669,21 @@ const styles = StyleSheet.create({
   imageViewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   imageViewerPhoto: {},
   imageViewerDotRow: { position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
+  addReviewBtn: { backgroundColor: Colors.headerGradient[0], paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  addReviewBtnText: { color: '#fff', fontSize: 13, fontWeight: '400' },
+  emptyReviews: {
+    alignItems: 'center', padding: 24, borderRadius: 8, borderWidth: 1, gap: 8, marginTop: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
+  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { borderTopLeftRadius: 14, borderTopRightRadius: 14, padding: 24, paddingBottom: 40 },
+  modalTitle: { fontSize: 18, fontWeight: '400' },
+  modalSub: { fontSize: 13, fontWeight: '400', marginBottom: 10 },
+  reviewInput: { borderWidth: 1.5, borderRadius: 7, padding: 12, fontSize: 14, minHeight: 100, marginTop: 4 },
+  modalBtns: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  modalCancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 7, paddingVertical: 8, alignItems: 'center' },
+  modalCancelText: { fontSize: 15, fontWeight: '400' },
+  modalSubmitBtn: { flex: 1, backgroundColor: Colors.headerGradient[0], borderRadius: 7, paddingVertical: 8, alignItems: 'center' },
+  modalSubmitText: { fontSize: 15, fontWeight: '400', color: '#fff' },
 });

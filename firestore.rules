@@ -79,6 +79,20 @@ service cloud.firestore {
                     || isAdmin();
     }
 
+    // ── SELLER RATINGS (marketplace) ────────────────────────────────────
+    match /sellerRatings/{sellerId}/items/{reviewId} {
+      // Anyone can read seller reviews (public, matches product detail page)
+      allow read: if true;
+      // Any signed-in user can leave a review, attributed to themselves
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Only the author can edit their own review (userId can't be reassigned)
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
+      // Author can delete their own review, admin can delete any review
+      allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid)
+                    || isAdmin();
+    }
+
     // ── TOURIST SITES ────────────────────────────────────────────────────
     match /touristSites/{siteId} {
       allow read: if true;
