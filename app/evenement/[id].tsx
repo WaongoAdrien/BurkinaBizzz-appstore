@@ -19,6 +19,7 @@ import { formatEventDateRange } from '../../lib/eventDate';
 
 registerTranslations({
   'Date': 'Date',
+  'À déterminer': 'TBD',
   'À propos': 'About',
   'Informations': 'Information',
   'Appeler': 'Call',
@@ -127,7 +128,7 @@ export default function EventDetailScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('Date')}</Text>
               </View>
-              <Text style={[styles.scheduleText, { color: theme.text }]}>{formatEventDateRange(event.date, event.endDate)}</Text>
+              <Text style={[styles.scheduleText, { color: theme.text }]}>{t(formatEventDateRange(event.date, event.endDate))}</Text>
             </View>
           ) : null}
 

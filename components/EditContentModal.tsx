@@ -11,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { db } from '../lib/firebase';
 import { Colors } from '../constants';
 import { DatePickerModal } from './DatePickerModal';
-import { formatEventDate } from '../lib/eventDate';
+import { formatEventDate, TBD_DATE } from '../lib/eventDate';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
@@ -23,6 +23,8 @@ registerTranslations({
   'Date de fin (optionnel)': 'End date (optional)',
   'Aucune': 'None',
   'Retirer la date de fin': 'Remove end date',
+  'TBD': 'TBD',
+  'À déterminer': 'TBD',
   'Téléphone': 'Phone',
   'Lien carte (Google Maps)': 'Map link (Google Maps)',
   'Page Facebook': 'Facebook page',
@@ -160,12 +162,26 @@ export function EditContentModal({ visible, kind, item, onClose, onSaved }: {
               {kind === 'events' && (
                 <>
                   <Text style={styles.label}>{t('Date')}</Text>
-                  <TouchableOpacity style={[styles.input, styles.dateInput]} onPress={() => setShowDatePicker(true)}>
-                    <Text style={{ color: date ? '#1A1A1A' : '#8A8A8A', fontSize: 14 }}>
-                      {date ? formatEventDate(date) : t('Date')}
-                    </Text>
-                    <MaterialIcons name="event" size={18} color="#8A8A8A" />
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <TouchableOpacity style={[styles.input, styles.dateInput, { flex: 1 }]} onPress={() => setShowDatePicker(true)}>
+                      <Text style={{ color: date ? '#1A1A1A' : '#8A8A8A', fontSize: 14 }}>
+                        {date ? t(formatEventDate(date)) : t('Date')}
+                      </Text>
+                      <MaterialIcons name="event" size={18} color="#8A8A8A" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.clearDateBtn,
+                        { paddingHorizontal: 10, width: undefined },
+                        date === TBD_DATE ? { backgroundColor: Colors.headerGradient[0], borderColor: Colors.headerGradient[0] } : null,
+                      ]}
+                      onPress={() => setDate(prev => prev === TBD_DATE ? '' : TBD_DATE)}
+                    >
+                      <Text style={{ color: date === TBD_DATE ? '#fff' : '#8A8A8A', fontSize: 12, fontWeight: '400' }}>
+                        {t('TBD')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
                   <Text style={styles.label}>{t('Date de fin (optionnel)')}</Text>
                   <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>

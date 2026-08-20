@@ -14,6 +14,7 @@ import EmptyState from '../components/EmptyState';
 
 registerTranslations({
   'Événements': 'Events',
+  'À déterminer': 'TBD',
   'Voir moins': 'See less',
   'Lire la suite': 'Read more',
   'Envie d\'évasion ?': 'Feeling adventurous?',
@@ -104,7 +105,7 @@ function EventCard({ item, liked, onToggleLike, isNext }: {
         {item.date && (
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={14} color="#8A8A8A" />
-            <Text style={styles.infoText}>{formatEventDateRange(item.date, item.endDate)}</Text>
+            <Text style={styles.infoText}>{t(formatEventDateRange(item.date, item.endDate))}</Text>
           </View>
         )}
         <View style={styles.infoRow}>

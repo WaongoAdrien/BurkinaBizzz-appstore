@@ -21,7 +21,7 @@ import { useColorTheme } from '../../hooks/useColorTheme';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
 import LocationPicker from '../../components/Locationpicker';
 import { DatePickerModal } from '../../components/DatePickerModal';
-import { formatEventDate } from '../../lib/eventDate';
+import { formatEventDate, TBD_DATE } from '../../lib/eventDate';
 
 registerTranslations({
   'Position GPS (pour la carte)': 'GPS position (for the map)',
@@ -134,6 +134,8 @@ registerTranslations({
   'Date de fin (optionnel)': 'End date (optional)',
   'Aucune': 'None',
   'Retirer la date de fin': 'Remove end date',
+  'TBD': 'TBD',
+  'À déterminer': 'TBD',
   'Téléphone': 'Phone',
   'Lien carte (Google Maps)': 'Map link (Google Maps)',
   'Page Facebook': 'Facebook page',
@@ -2092,15 +2094,31 @@ export default function AdminScreen() {
               {contentForm.kind === 'events' && (
                 <>
                   <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Date')}</Text>
-                  <TouchableOpacity
-                    style={[styles.fieldInput, { borderColor: theme.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
-                    onPress={() => setEventDatePickerVisible(true)}
-                  >
-                    <Text style={{ color: contentForm.date ? theme.text : theme.textSecondary, fontSize: 14 }}>
-                      {contentForm.date ? formatEventDate(contentForm.date) : t('Ex : 12 septembre 2026')}
-                    </Text>
-                    <MaterialIcons name="event" size={18} color={theme.textSecondary} />
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <TouchableOpacity
+                      style={[styles.fieldInput, { flex: 1, borderColor: theme.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+                      onPress={() => setEventDatePickerVisible(true)}
+                    >
+                      <Text style={{ color: contentForm.date ? theme.text : theme.textSecondary, fontSize: 14 }}>
+                        {contentForm.date ? t(formatEventDate(contentForm.date)) : t('Ex : 12 septembre 2026')}
+                      </Text>
+                      <MaterialIcons name="event" size={18} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.clearDateBtn,
+                        { paddingHorizontal: 10, width: undefined },
+                        contentForm.date === TBD_DATE
+                          ? { backgroundColor: Colors.cta, borderColor: Colors.cta }
+                          : { borderColor: theme.border },
+                      ]}
+                      onPress={() => setContentForm(prev => ({ ...prev, date: prev.date === TBD_DATE ? '' : TBD_DATE }))}
+                    >
+                      <Text style={{ color: contentForm.date === TBD_DATE ? '#fff' : theme.textSecondary, fontSize: 12, fontWeight: '400' }}>
+                        {t('TBD')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
                   <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>{t('Date de fin (optionnel)')}</Text>
                   <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>

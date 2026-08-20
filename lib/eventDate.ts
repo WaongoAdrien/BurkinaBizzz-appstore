@@ -1,5 +1,15 @@
 // lib/eventDate.ts — parse/format event dates stored as ISO "YYYY-MM-DD" strings
 
+// Sentinel value for "date not yet known" — stored as-is in the date field (it isn't a
+// valid ISO date, so parseEventDate/isPastDate treat it like any other unparseable value
+// and it falls into the "Date non précisée" bucket, but it displays as an explicit label
+// instead of a raw/blank date).
+export const TBD_DATE = 'À déterminer';
+
+export function isTbdDate(value?: string): boolean {
+  return value === TBD_DATE;
+}
+
 const MONTHS_FR = [
   'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
   'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
