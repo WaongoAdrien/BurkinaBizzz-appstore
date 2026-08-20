@@ -44,7 +44,7 @@ registerTranslations({
   'Trouvé sur BurkinaBizz': 'Found on BurkinaBizz',
 });
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -330,12 +330,13 @@ export default function ProductDetailScreen() {
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0, height }}
               keyExtractor={(_, i) => String(i)}
               initialScrollIndex={viewerIndex}
               getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
               onMomentumScrollEnd={e => setViewerIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
               renderItem={({ item }) => (
-                <Image source={{ uri: item }} style={[styles.imageViewerPhoto, { width }]} resizeMode="contain" />
+                <Image source={{ uri: item }} style={[styles.imageViewerPhoto, { width, height }]} resizeMode="contain" />
               )}
             />
 
@@ -415,6 +416,6 @@ const styles = StyleSheet.create({
   infoCard: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, marginTop: 16 },
   imageViewerContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   imageViewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  imageViewerPhoto: { height: '100%' },
+  imageViewerPhoto: {},
   imageViewerDotRow: { position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
 });
