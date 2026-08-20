@@ -64,6 +64,8 @@ registerTranslations({
   'Envoi...': 'Submitting...',
   '📤 Soumettre pour approbation': '📤 Submit for approval',
   'Erreur': 'Error',
+  'Attention': 'Warning',
+  "Impossible d'envoyer les photos. Vérifiez votre connexion et réessayez.": 'Unable to upload the photos. Check your connection and try again.',
   "Impossible d'envoyer. Vérifiez votre connexion.": 'Unable to submit. Check your connection.',
   '✅ Produit soumis!': '✅ Product submitted!',
   'Votre annonce sera examinée sous 24–48h avant de paraître dans le marché.': 'Your listing will be reviewed within 24–48h before appearing in the marketplace.',
@@ -242,8 +244,19 @@ export default function AddProductScreen() {
     setUploadProgress(0);
     try {
       const uploadedUrls: string[] = [];
+      let failedUploads = 0;
       for (let i = 0; i < photoUris.length; i++) {
-        try { uploadedUrls.push(await uploadPhoto(photoUris[i], i)); } catch {}
+        try { uploadedUrls.push(await uploadPhoto(photoUris[i], i)); }
+        catch { failedUploads++; }
+      }
+
+      if (photoUris.length > 0 && uploadedUrls.length === 0) {
+        Alert.alert(t('Erreur'), t("Impossible d'envoyer les photos. Vérifiez votre connexion et réessayez."));
+        setLoading(false);
+        return;
+      }
+      if (failedUploads > 0) {
+        Alert.alert(t('Attention'), t(`${failedUploads} photo(s) n'ont pas pu être envoyées. Le produit sera publié avec les autres photos.`));
       }
 
       await addDoc(collection(db, 'products'), {

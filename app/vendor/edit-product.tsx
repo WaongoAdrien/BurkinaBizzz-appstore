@@ -23,6 +23,7 @@ registerTranslations({
   'optionnel': 'optional',
   'Annuler': 'Cancel',
   'Erreur': 'Error',
+  'Attention': 'Warning',
   'Produit introuvable.': 'Product not found.',
   'Accès refusé': 'Access denied',
   'Vous ne pouvez modifier que vos propres produits.': 'You can only edit your own products.',
@@ -279,8 +280,13 @@ export default function EditProductScreen() {
     setUploadProgress(0);
     try {
       const newUrls: string[] = [];
+      let failedUploads = 0;
       for (let i = 0; i < newPhotoUris.length; i++) {
-        try { newUrls.push(await uploadPhoto(newPhotoUris[i], i)); } catch {}
+        try { newUrls.push(await uploadPhoto(newPhotoUris[i], i)); }
+        catch { failedUploads++; }
+      }
+      if (failedUploads > 0) {
+        Alert.alert(t('Attention'), t(`${failedUploads} nouvelle(s) photo(s) n'ont pas pu être envoyées. Les autres modifications seront tout de même enregistrées.`));
       }
       const allPhotos = [...existingPhotos, ...newUrls];
 
