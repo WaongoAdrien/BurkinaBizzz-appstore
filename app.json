@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.burkinabizz.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "BurkinaBizz a besoin de la camera pour prendre des photos.",
         "NSPhotoLibraryUsageDescription": "BurkinaBizz a besoin de vos photos pour importer des images.",
