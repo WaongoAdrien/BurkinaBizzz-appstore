@@ -1,6 +1,6 @@
 // scripts/seed-iphone17.js
 // ─────────────────────────────────────────────────────────────────────────────
-// One-shot, idempotent seed for the iPhone 17 Pro / Pro Max listings.
+// One-shot, idempotent seed for the iPhone 17 Pro / Pro Max / Air listings.
 //
 // Run with:   node scripts/seed-iphone17.js
 // Overwrite:  node scripts/seed-iphone17.js --force
@@ -36,19 +36,49 @@ const SELLER = {
 // ── SHARED LISTING ATTRIBUTES ────────────────────────────────────────────────
 const CITY = 'Ouagadougou';
 const CATEGORY = 'Téléphones & Tablettes';
-const COLORS = 'Orange cosmique, Bleu profond, Argent';
 const ESIM_NOTE =
   '⚠️ Modèle eSIM uniquement (pas de tiroir SIM physique) — compatible Orange, ' +
   'Moov et Telecel, aide à l\'activation offerte.';
 
+// ── FAMILIES ─────────────────────────────────────────────────────────────────
+// Per-family spec line + colours. Storage/price vary per listing (MODELS below);
+// everything else about a model is shared across its storage tiers.
+const FAMILIES = {
+  'iPhone 17 Pro': {
+    colors: 'Orange cosmique, Bleu profond, Argent',
+    warranty: 'Garantie 12 mois vendeur.',
+    specs:
+      'Écran Super Retina XDR 6,3 po ProMotion 120 Hz, puce A19 Pro, triple capteur 48 MP ' +
+      'avec zoom optique jusqu\'à 8x, jusqu\'à 33 h de lecture vidéo, USB-C.',
+  },
+  'iPhone 17 Pro Max': {
+    colors: 'Orange cosmique, Bleu profond, Argent',
+    warranty: 'Garantie 12 mois vendeur.',
+    specs:
+      'Écran Super Retina XDR 6,9 po ProMotion 120 Hz, puce A19 Pro, triple capteur 48 MP ' +
+      'avec zoom optique jusqu\'à 8x, jusqu\'à 39 h de lecture vidéo, USB-C.',
+  },
+  'iPhone Air': {
+    colors: 'Bleu ciel, Or clair, Blanc nuage, Noir sidéral',
+    warranty: 'Garantie 12 mois.',
+    specs:
+      'L\'iPhone le plus fin jamais conçu (5,6 mm) avec châssis en titane. ' +
+      'Écran Super Retina XDR 6,5 po ProMotion 120 Hz, puce A19 Pro, caméra Fusion 48 MP, ' +
+      'caméra frontale Center Stage 18 MP, jusqu\'à 27 h de lecture vidéo, USB-C.',
+  },
+};
+
 // ── MODELS ───────────────────────────────────────────────────────────────────
 const MODELS = [
-  { model: 'iPhone 17 Pro',     screen: '6,3 po', battery: '33 h', storage: '256 Go', price: 835000 },
-  { model: 'iPhone 17 Pro',     screen: '6,3 po', battery: '33 h', storage: '512 Go', price: 945000 },
-  { model: 'iPhone 17 Pro',     screen: '6,3 po', battery: '33 h', storage: '1 To',   price: 1100000 },
-  { model: 'iPhone 17 Pro Max', screen: '6,9 po', battery: '39 h', storage: '256 Go', price: 925000 },
-  { model: 'iPhone 17 Pro Max', screen: '6,9 po', battery: '39 h', storage: '512 Go', price: 1075000 },
-  { model: 'iPhone 17 Pro Max', screen: '6,9 po', battery: '39 h', storage: '1 To',   price: 1225000 },
+  { model: 'iPhone 17 Pro',     storage: '256 Go', price: 835000 },
+  { model: 'iPhone 17 Pro',     storage: '512 Go', price: 945000 },
+  { model: 'iPhone 17 Pro',     storage: '1 To',   price: 1100000 },
+  { model: 'iPhone 17 Pro Max', storage: '256 Go', price: 925000 },
+  { model: 'iPhone 17 Pro Max', storage: '512 Go', price: 1075000 },
+  { model: 'iPhone 17 Pro Max', storage: '1 To',   price: 1225000 },
+  { model: 'iPhone Air',        storage: '256 Go', price: 750000 },
+  { model: 'iPhone Air',        storage: '512 Go', price: 880000 },
+  { model: 'iPhone Air',        storage: '1 To',   price: 1010000 },
 ];
 
 // Deterministic, human-readable document ID — this is what makes the seed
@@ -70,12 +100,13 @@ function buildName({ model, storage }) {
   return `${model} ${storage} — Neuf scellé (Apple USA)`;
 }
 
-function buildDescription({ model, screen, battery, storage }) {
+function buildDescription({ model, storage }) {
+  const family = FAMILIES[model];
+  if (!family) throw new Error(`No FAMILIES entry for model "${model}"`);
   return [
     `${model} ${storage} — NEUF, scellé, importé directement d'Apple (USA).`,
-    `Écran Super Retina XDR ${screen} ProMotion 120 Hz, puce A19 Pro, triple capteur 48 MP ` +
-      `avec zoom optique jusqu'à 8x, jusqu'à ${battery} de lecture vidéo, USB-C.`,
-    `Couleurs : ${COLORS}. Garantie 12 mois vendeur.`,
+    family.specs,
+    `Couleurs : ${family.colors}. ${family.warranty}`,
     'Paiement Orange Money / Moov Money / espèces. Livraison à Ouagadougou.',
     ESIM_NOTE,
   ].join('\n');
