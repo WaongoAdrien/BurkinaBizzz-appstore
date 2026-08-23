@@ -133,8 +133,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
 const styles = StyleSheet.create({
   card: {
+    // Fixed fraction rather than flex:1 — with numColumns={2}, a flexed card
+    // in a half-empty last row stretches to the full width. 48% keeps every
+    // card identical whether its row holds one item or two.
+    width: '48%',
     borderRadius: 8, overflow: 'hidden',
-    marginBottom: 12, marginHorizontal: 6, flex: 1, borderWidth: 1,
+    marginBottom: 12, borderWidth: 1,
     elevation: 2, shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08, shadowRadius: 6,
@@ -155,7 +159,9 @@ const styles = StyleSheet.create({
   },
   likeIcon: { fontSize: 16 },
   info: { padding: 10, gap: 4 },
-  name: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
+  // minHeight reserves both lines so a short title (1 line) yields the same
+  // card height as a long one (2 lines) — keeps every future listing uniform.
+  name: { fontSize: 14, fontWeight: '400', lineHeight: 20, minHeight: 40 },
   city: { fontSize: 12 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' },
   price: { fontSize: 15, fontWeight: '400', color: Colors.primary },
