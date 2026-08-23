@@ -46,21 +46,18 @@ const ESIM_NOTE =
 const FAMILIES = {
   'iPhone 17 Pro': {
     colors: 'Orange cosmique, Bleu profond, Argent',
-    warranty: 'Garantie 12 mois vendeur.',
     specs:
       'Écran Super Retina XDR 6,3 po ProMotion 120 Hz, puce A19 Pro, triple capteur 48 MP ' +
       'avec zoom optique jusqu\'à 8x, jusqu\'à 33 h de lecture vidéo, USB-C.',
   },
   'iPhone 17 Pro Max': {
     colors: 'Orange cosmique, Bleu profond, Argent',
-    warranty: 'Garantie 12 mois vendeur.',
     specs:
       'Écran Super Retina XDR 6,9 po ProMotion 120 Hz, puce A19 Pro, triple capteur 48 MP ' +
       'avec zoom optique jusqu\'à 8x, jusqu\'à 39 h de lecture vidéo, USB-C.',
   },
   'iPhone Air': {
     colors: 'Bleu ciel, Or clair, Blanc nuage, Noir sidéral',
-    warranty: 'Garantie 12 mois.',
     specs:
       'L\'iPhone le plus fin jamais conçu (5,6 mm) avec châssis en titane. ' +
       'Écran Super Retina XDR 6,5 po ProMotion 120 Hz, puce A19 Pro, caméra Fusion 48 MP, ' +
@@ -106,8 +103,8 @@ function buildDescription({ model, storage }) {
   return [
     `${model} ${storage} — NEUF, scellé, importé directement d'Apple (USA).`,
     family.specs,
-    `Couleurs : ${family.colors}. ${family.warranty}`,
-    'Paiement Orange Money / Moov Money / espèces. Livraison à Ouagadougou.',
+    `Couleurs : ${family.colors}.`,
+    'Livraison à Ouagadougou.',
     ESIM_NOTE,
   ].join('\n');
 }

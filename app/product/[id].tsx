@@ -417,7 +417,13 @@ export default function ProductDetailScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('À propos')}</Text>
               </View>
-              <Text style={[styles.description, { color: theme.textSecondary }]}>{product.description}</Text>
+              <Text style={[styles.description, { color: theme.textSecondary }]}>
+                {product.description.split('\n').map((line, i, all) => (
+                  <Text key={i} style={line.trim().startsWith('⚠️') ? styles.descriptionAlert : undefined}>
+                    {line}{i < all.length - 1 ? '\n' : ''}
+                  </Text>
+                ))}
+              </Text>
             </View>
           ) : null}
 
@@ -651,6 +657,9 @@ const styles = StyleSheet.create({
   city: { fontSize: 13 },
   likeBtn: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 1, flexShrink: 0 },
   description: { fontSize: 14, lineHeight: 22 },
+  // Any description line starting with ⚠️ (e.g. the eSIM-only notice) is
+  // rendered bold so buyers can't miss it.
+  descriptionAlert: { fontWeight: '700' },
   vendorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   vendorAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   vendorAvatarText: { fontSize: 15, fontWeight: '600' },
