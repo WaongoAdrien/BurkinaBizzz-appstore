@@ -9,7 +9,7 @@
 // Idempotence, schéma et écriture : voir scripts/lib/business-seed.js.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const { seedBusinesses } = require('./lib/business-seed');
+const { seedBusinesses, everyDay } = require('./lib/business-seed');
 
 const CATEGORY = 'Restauration';
 
@@ -26,6 +26,30 @@ const VENUES = [
     instagram: null,
     openingHours: null,                // aucun horaire publié (la page indique seulement « Ouvert »)
     description: 'Restaurant à Wemtenga, Ouagadougou. Spécialité sea food : poulet mayo, poisson braisé et bien d\'autres.',
+  },
+  {
+    // Source : page Facebook officielle (facebook.com/sessikaPFC).
+    name: 'Pâtisserie Sessika PFC',
+    address: null,                     // le champ « Adresse » de la page contient « 25480051 »,
+                                       // qui ressemble à un numéro de téléphone — non repris tel quel
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: null,                       // aucun numéro dans les infos de contact
+    facebook: 'https://www.facebook.com/sessikaPFC',
+    instagram: null,
+    openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
+    description: 'La Pâtisserie Sessika PFC (pâtisserie, fast-food, café) est un cadre idéal pour vos sorties. Ouagadougou.',
+  },
+  {
+    // Source : page Facebook officielle (facebook.com/La.Delicieuse.FastFood).
+    name: 'La Délicieuse Chicken',
+    address: 'Karpala, nouveau goudron de la station Shell, non loin du maquis TOUT OUAGA',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 68 44 63 62',
+    facebook: 'https://www.facebook.com/La.Delicieuse.FastFood',
+    instagram: null,
+    // Horaires annoncés par l'établissement dans sa bio : « ouverts tous les jours de 8h à 00h ».
+    openingHours: everyDay('08:00', '00:00'),
+    description: 'Restaurant spécialisé dans le poulet pané, le burger, le shawarma, le panini, etc. Menu varié. Karpala, Ouagadougou.',
   },
 ];
 
