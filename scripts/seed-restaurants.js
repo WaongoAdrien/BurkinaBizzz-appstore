@@ -51,6 +51,17 @@ const VENUES = [
     openingHours: everyDay('08:00', '00:00'),
     description: 'Restaurant spécialisé dans le poulet pané, le burger, le shawarma, le panini, etc. Menu varié. Karpala, Ouagadougou.',
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=61591757049256).
+    name: 'Restaurant Congolais Matonge',
+    address: 'Ouaga 2000',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 05 43 64 64',
+    facebook: 'https://www.facebook.com/profile.php?id=61591757049256',
+    instagram: null,
+    openingHours: null,                // aucun horaire publié sur la page
+    description: 'Le goût authentique du Congo au cœur de Ouagadougou. Spécialités congolaises et africaines. Ouaga 2000.',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
