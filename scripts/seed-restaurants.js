@@ -62,6 +62,20 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié sur la page
     description: 'Le goût authentique du Congo au cœur de Ouagadougou. Spécialités congolaises et africaines. Ouaga 2000.',
   },
+  {
+    // Source : page Facebook officielle (facebook.com/Restaurantchezwilly).
+    // Le champ « Adresse » de la page ne contient qu'un lien Google Maps ; l'adresse
+    // et les coordonnées viennent de la fiche Maps pointée par ce lien, dont le
+    // numéro de téléphone correspond exactement à celui de la page Facebook.
+    name: 'Restaurant chez willy',
+    address: '17 rue 619, Pissy',
+    latitude: 12.3299943, longitude: -1.5843661,
+    phone: '+226 77 71 24 67',
+    facebook: 'https://www.facebook.com/Restaurantchezwilly',
+    instagram: null,
+    openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
+    description: 'Restaurant spécialisé dans les plats africains, avec service de livraison. 17 rue 619, Pissy, Ouagadougou.',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
