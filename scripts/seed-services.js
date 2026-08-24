@@ -1,0 +1,46 @@
+// scripts/seed-services.js
+// ─────────────────────────────────────────────────────────────────────────────
+// Seed idempotent des entreprises de services.
+//
+// Lancer   :  node scripts/seed-services.js
+// Aperçu   :  node scripts/seed-services.js --dry-run
+// Réécrire :  node scripts/seed-services.js --force
+//
+// Idempotence, schéma et écriture : voir scripts/lib/business-seed.js.
+// Une fiche peut porter plusieurs catégories via `categories` ; la première
+// devient la catégorie principale.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const { seedBusinesses, everyDay } = require('./lib/business-seed');
+
+const CATEGORY = 'Services';
+
+// ── ÉTABLISSEMENTS ───────────────────────────────────────────────────────────
+// Un champ absent/null reste null — aucune valeur n'est inventée.
+const VENUES = [
+  {
+    // Source : site officiel toolebf.com (pas de page Facebook trouvée).
+    name: 'Toole Livraison',
+    categories: ['Services', 'Autres'],
+    // Le site donne l'adresse sous forme de Plus Code Google ; les coordonnées
+    // viennent de la résolution de ce code, qui tombe bien à Wayalghin.
+    address: 'CG3J+GH9 Wayalguin',
+    latitude: 12.4037875, longitude: -1.4685156,
+    phone: '+226 04 95 85 00',
+    // Le site ne publie qu'un lien wa.me/message/… (lien de conversation, pas
+    // un numéro) — impossible d'en déduire le numéro WhatsApp, donc laissé vide.
+    whatsapp: null,
+    facebook: null,
+    instagram: null,
+    website: 'https://www.toolebf.com',
+    // Le site annonce « 24/7 · Jour & nuit ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: 'Plateforme de livraison de colis à Ouagadougou. La commande se fait directement par WhatsApp : le devis est généré automatiquement et la course est confiée à un livreur indépendant à proximité. Livraison express, colis volumineux, livraison de nuit, envois groupés et suivi en temps réel. Paiement mobile money ou à la livraison.',
+  },
+];
+
+seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
+  console.error('✖ Échec du seed :', err.message);
+  process.exit(1);
+});

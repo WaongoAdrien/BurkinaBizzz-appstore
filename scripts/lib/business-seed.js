@@ -63,10 +63,13 @@ function docId(name) {
 
 // Un champ absent/null reste null — aucune valeur n'est inventée.
 function buildBusiness(v, category) {
+  // Une fiche peut porter plusieurs catégories (79 fiches existantes le font).
+  // `category` reste la catégorie principale, c'est-à-dire la première.
+  const categories = v.categories?.length ? v.categories : [category];
   return {
     name: v.name,
-    category,
-    categories: [category],
+    category: categories[0],
+    categories,
     city: v.city || CITY,
     description: v.description,
     phone: v.phone ?? null,
