@@ -76,6 +76,19 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
     description: 'Restaurant spécialisé dans les plats africains, avec service de livraison. 17 rue 619, Pissy, Ouagadougou.',
   },
+  {
+    // Source : page Facebook officielle (facebook.com/ChezNiniRestaurant).
+    // La page annonce le site restaurantcheznini.com, mais il ne répond plus
+    // (avec et sans « www ») — non enregistré pour éviter un lien mort.
+    name: 'Chez NINI',
+    address: "Ouaga 2000, contiguë à l'immeuble de ARCEP, non loin du palais de justice",
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 72 58 60 60',
+    facebook: 'https://www.facebook.com/ChezNiniRestaurant',
+    instagram: null,
+    openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
+    description: 'Restaurant gastronomique, spécialités africaines et européennes. Ouaga 2000, Ouagadougou.',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
