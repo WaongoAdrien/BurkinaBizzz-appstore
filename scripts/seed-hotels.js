@@ -33,6 +33,27 @@ const VENUES = [
     openingHours: everyDay('00:00', '00:00'),
     description: "Espace détente à Gampela : chambres climatisées et suites, salle de conférence ultra-moderne, piscine, restaurant-bar et service traiteur sur mesure. Situé sur la RN4, à 300 m de Coca-Cola.",
   },
+  {
+    // Source : page Facebook officielle (facebook.com/residencewifi).
+    // Catégorie Facebook : « Hotel & Lodging », mais l'offre (studios et
+    // appartements meublés en location journalière) relève de « Résidence meublée ».
+    name: 'Résidence WIFI',
+    categories: ['Résidence meublée'],
+    // La page donne son adresse sous forme de Plus Code Google ; les coordonnées
+    // viennent de sa résolution. Aucun nom de quartier n'est publié pour recouper.
+    address: '6FW7+9R Ouagadougou',
+    latitude: 12.2459375, longitude: -1.5354375,
+    phone: '+226 69 11 05 47',
+    // La bio invite à réserver « via WhatsApp » mais la page ne publie aucun
+    // numéro WhatsApp dédié — non déduit du téléphone.
+    whatsapp: null,
+    facebook: 'https://www.facebook.com/residencewifi',
+    instagram: null,
+    website: null,
+    // La page indique « Always open ».
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Studios et appartements meublés au cœur de la ville : wifi illimité, équipements complets et service de ménage. Location journalière, hebdomadaire ou mensuelle.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
