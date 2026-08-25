@@ -139,6 +139,22 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié
     description: "Spécialiste de l'attiéké et du garba à Bobo-Dioulasso. Livraison à domicile, paiement Orange Money.",
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=61579140880066).
+    // À ne pas confondre avec la fiche « Chez Simon » déjà présente
+    // (udLigJRf2XNEpthqO6bH) : page Facebook, adresse et téléphone différents.
+    // Probablement un second établissement de la même enseigne, non confirmé —
+    // les deux fiches ne sont donc pas liées entre elles.
+    name: "Chez Simon L'Expérience",
+    address: "À l'intersection du Boulevard France-Afrique et du nouveau goudron menant à Bonheur Ville, en face du Palace Hôtel",
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 50 00 00 08',
+    facebook: 'https://www.facebook.com/profile.php?id=61579140880066',
+    instagram: null,
+    website: 'https://www.chezsimonexperience.com',
+    openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
+    description: "Restaurant à Ouagadougou : saveurs authentiques et ambiance raffinée. Situé à l'intersection du Boulevard France-Afrique, en face du Palace Hôtel.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {

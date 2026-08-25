@@ -54,6 +54,24 @@ const VENUES = [
     openingHours: everyDay('00:00', '00:00'),
     description: "Studios et appartements meublés au cœur de la ville : wifi illimité, équipements complets et service de ménage. Location journalière, hebdomadaire ou mensuelle.",
   },
+  {
+    // Source : page Facebook officielle (facebook.com/MassabaLodge).
+    // La page se décrit comme « Bar - Restaurant - Hébergement », d'où les deux
+    // catégories ; catégorie Facebook : « Lodge ».
+    name: 'Massaba Lodge',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Zogona',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 64 77 20 20',
+    // Déclaré dans le champ « WhatsApp number » de la page.
+    whatsapp: '+226 64 77 20 20',
+    facebook: 'https://www.facebook.com/MassabaLodge',
+    instagram: 'massabalodge',
+    website: null,                     // aucun site, seul un lien Instagram
+    // La page indique « Always open ».
+    openingHours: everyDay('00:00', '00:00'),
+    description: 'Bar, restaurant et hébergement à Zogona, Ouagadougou.',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
