@@ -168,6 +168,8 @@ const VENUES = [
     website: null,
     openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
     description: 'Restaurant et bar à Ouagadougou, quartier Saint Léon, en face du Lycée Français Saint-Exupéry.',
+    // Même exploitant que L'Hédone Hôtel (téléphone et e-mail identiques).
+    relatedBusinessId: 'l-hedone-hotel-ouagadougou',
   },
 ];
 

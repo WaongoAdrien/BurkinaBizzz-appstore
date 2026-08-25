@@ -90,6 +90,24 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié
     description: "Situé à Koudougou, non loin de l'université Norbert Zongo. Hébergement et loisirs : villas meublées, terrasse, bar, billard et baby-foot, espace VIP climatisé.",
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=61550925737347).
+    // Même téléphone (+226 60 16 80 80) et même e-mail (contact@villakaya.net)
+    // que Villa Kaya : même exploitant, à deux adresses distinctes (Zogona ici,
+    // Saint Léon pour Villa Kaya). Les deux fiches sont donc reliées.
+    // L'adresse est publiée sous forme de Plus Code ; les coordonnées viennent
+    // de sa résolution, qui tombe bien à Zogona.
+    name: "L'Hédone Hôtel Ouagadougou",
+    address: 'Zogona (9GJ4+6R8)',
+    latitude: 12.3805375, longitude: -1.4929219,
+    phone: '+226 60 16 80 80',
+    facebook: 'https://www.facebook.com/profile.php?id=61550925737347',
+    instagram: null,
+    website: null,                     // villakaya.net redirige vers une page Facebook indisponible
+    openingHours: null,                // aucun horaire publié
+    description: 'Hôtel de charme à Zogona, Ouagadougou.',
+    relatedBusinessId: 'villa-kaya',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
