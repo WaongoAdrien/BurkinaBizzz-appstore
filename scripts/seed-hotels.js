@@ -72,6 +72,24 @@ const VENUES = [
     openingHours: everyDay('00:00', '00:00'),
     description: 'Bar, restaurant et hébergement à Zogona, Ouagadougou.',
   },
+  {
+    // Source : page Facebook officielle (facebook.com/akandalodge).
+    // ⚠ L'établissement est à KOUDOUGOU, pas à Ouagadougou. Le type City de
+    // l'app ne connaît que Ouagadougou et Bobo-Dioulasso ; classé à Ouagadougou
+    // sur décision explicite, faute de mieux. L'adresse et la première phrase de
+    // la description annoncent Koudougou pour éviter toute confusion.
+    // À rebasculer si 'Koudougou' est un jour ajouté au type City.
+    name: 'Akanda Lodge',
+    categories: ['Hôtellerie', 'Attractions'],
+    address: "Koudougou, non loin de l'université Norbert Zongo, à 200 m à droite après Gapal",
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 57 63 36 24',
+    facebook: 'https://www.facebook.com/akandalodge',
+    instagram: null,
+    website: null,
+    openingHours: null,                // aucun horaire publié
+    description: "Situé à Koudougou, non loin de l'université Norbert Zongo. Hébergement et loisirs : villas meublées, terrasse, bar, billard et baby-foot, espace VIP climatisé.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {

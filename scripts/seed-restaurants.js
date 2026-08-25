@@ -155,6 +155,20 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
     description: "Restaurant à Ouagadougou : saveurs authentiques et ambiance raffinée. Situé à l'intersection du Boulevard France-Afrique, en face du Palace Hôtel.",
   },
+  {
+    // Source : page Facebook officielle (facebook.com/villakaya226).
+    name: 'Villa Kaya',
+    address: 'Saint Léon, en face du Lycée Français Saint-Exupéry',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 60 16 80 80',
+    facebook: 'https://www.facebook.com/villakaya226',
+    instagram: null,
+    // La page annonce villakaya.net, mais ce domaine ne fait que rediriger vers
+    // une ancienne page Facebook (VillaKayaBF) devenue indisponible — non enregistré.
+    website: null,
+    openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
+    description: 'Restaurant et bar à Ouagadougou, quartier Saint Léon, en face du Lycée Français Saint-Exupéry.',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
