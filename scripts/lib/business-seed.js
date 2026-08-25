@@ -91,6 +91,9 @@ function buildBusiness(v, category) {
     status: STATUS,
     priority: 0,
     verified: false,          // à passer à true après vérification manuelle
+    // Lie deux fiches d'une même enseigne (ex : la même entreprise présente
+    // dans deux annuaires de villes) — affiché en carte « Voir aussi ».
+    relatedBusinessId: v.relatedBusinessId ?? null,
   };
 }
 
@@ -110,8 +113,11 @@ async function seedBusinesses(venues, category, argv = process.argv) {
   let created = 0, updated = 0, skipped = 0;
 
   for (const v of venues) {
-    const id = docId(v.name);
-    const clash = byName.get(v.name.toLowerCase().trim());
+    // `id` explicite : sert quand une même enseigne a volontairement plusieurs
+    // fiches (annuaires de villes différents), donc le même nom. Dans ce cas le
+    // garde-fou anti-doublon par nom est court-circuité, le doublon étant voulu.
+    const id = v.id || docId(v.name);
+    const clash = v.id ? null : byName.get(v.name.toLowerCase().trim());
 
     if (clash && clash !== id) {
       console.log(`⚠ ignoré  ${id} — une fiche "${v.name}" existe déjà (${clash})`);

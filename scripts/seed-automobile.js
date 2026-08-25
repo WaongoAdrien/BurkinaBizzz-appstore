@@ -22,6 +22,9 @@ const VENUES = [
     // Source : page Facebook officielle (facebook.com/orbisauto.official).
     // Exportateur basé en Corée du Sud (indicatif +82) : la fiche alimente
     // l'annuaire Corée du Sud, pas celui du Burkina.
+    // `id` explicite comme la fiche jumelle ci-dessous : les deux portent le
+    // même nom, le garde-fou anti-doublon par nom doit donc être neutralisé.
+    id: 'orbis-auto',
     name: 'Orbis Auto',
     city: 'South Korea',
     address: null,                     // aucune adresse publiée
@@ -35,6 +38,26 @@ const VENUES = [
     website: 'https://orbisauto.com',
     openingHours: null,                // aucun horaire publié
     description: "Exportateur de véhicules d'occasion et de pièces détachées basé en Corée du Sud. Recherche et export de voitures d'occasion vers l'international, avec catalogue en ligne.",
+    relatedBusinessId: 'orbis-auto-ouagadougou',
+  },
+  {
+    // Même enseigne que ci-dessus, dupliquée volontairement pour apparaître
+    // aussi dans l'annuaire de Ouagadougou. `id` explicite car le nom est
+    // identique : sans lui, le garde-fou anti-doublon bloquerait la fiche.
+    // Les deux fiches se pointent mutuellement via relatedBusinessId.
+    id: 'orbis-auto-ouagadougou',
+    name: 'Orbis Auto',
+    city: 'Ouagadougou',
+    address: null,                     // aucune adresse au Burkina publiée
+    latitude: null, longitude: null,
+    phone: '+82 10 5050 4281',
+    whatsapp: '+82 10 5050 4281',
+    facebook: 'https://www.facebook.com/orbisauto.official',
+    instagram: null,
+    website: 'https://orbisauto.com',
+    openingHours: null,
+    description: "Exportateur de véhicules d'occasion et de pièces détachées basé en Corée du Sud, qui expédie à l'international. Commande depuis le Burkina Faso via leur catalogue en ligne ou WhatsApp. Contact en Corée du Sud (+82).",
+    relatedBusinessId: 'orbis-auto',
   },
 ];
 
