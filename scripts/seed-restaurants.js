@@ -122,6 +122,23 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié
     description: 'Restaurant à Bobo-Dioulasso : menus du jour et plats faits maison. Autre contact : +226 72 02 05 14.',
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=61585593407037).
+    // Téléphone et adresse proviennent de la bio de la page : le champ Adresse
+    // officiel ne contient que « 56971808 », un numéro sans signification comme
+    // adresse. Le numéro est confirmé trois fois (bio, bannière, visuel du menu)
+    // et la bio le présente comme « Info/WhatsApp ».
+    name: 'Mana-Tiéké',
+    city: 'Bobo-Dioulasso',
+    address: "Secteur 22, à côté du stade Lamizana, près de l'école Apha de Solidarité",
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 04 89 31 11',
+    whatsapp: '+226 04 89 31 11',
+    facebook: 'https://www.facebook.com/profile.php?id=61585593407037',
+    instagram: null,
+    openingHours: null,                // aucun horaire publié
+    description: "Spécialiste de l'attiéké et du garba à Bobo-Dioulasso. Livraison à domicile, paiement Orange Money.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
