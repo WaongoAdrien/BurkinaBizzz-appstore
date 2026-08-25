@@ -106,6 +106,22 @@ const VENUES = [
     openingHours: null,                // aucun horaire structuré publié
     description: "De la viande de porc grillée à la broche sur du charbon de bois. Livraison possible, matins et soirs. Autres contacts : +226 71 54 10 41 et +226 77 68 95 20.",
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=61560627452933).
+    // Adresse laissée vide : la page se contredit sur le quartier — la bannière
+    // annonce « Sis au Sect. 9 Accart-Ville », tandis que la publication du
+    // 1er août et le visuel du menu indiquent « Sarfalao secteur 17, près du
+    // château Telecel ». Le champ Adresse officiel ne dit que « Bobo Dioulasso ».
+    name: 'Restaurant Chez NAFIS',
+    city: 'Bobo-Dioulasso',
+    address: null,
+    latitude: null, longitude: null,
+    phone: '+226 75 28 25 39',
+    facebook: 'https://www.facebook.com/profile.php?id=61560627452933',
+    instagram: null,
+    openingHours: null,                // aucun horaire publié
+    description: 'Restaurant à Bobo-Dioulasso : menus du jour et plats faits maison. Autre contact : +226 72 02 05 14.',
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
