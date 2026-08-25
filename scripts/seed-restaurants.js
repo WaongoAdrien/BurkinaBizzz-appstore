@@ -89,6 +89,23 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié (la page indique seulement « Fermé »)
     description: 'Restaurant gastronomique, spécialités africaines et européennes. Ouaga 2000, Ouagadougou.',
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=100083758572705).
+    // Adresse volontairement vide : la seule indication trouvée (« vers AMPO
+    // Dagnoin en allant à la ZAD ») provient d'un commentaire d'internaute,
+    // pas de l'établissement — non repris.
+    name: 'Cochon Piqué',
+    address: null,
+    latitude: null, longitude: null,
+    phone: '+226 65 10 87 16',
+    // Numéro de contact officiel de la page, que l'établissement signale avec
+    // une icône WhatsApp dans ses publications.
+    whatsapp: '+226 65 10 87 16',
+    facebook: 'https://www.facebook.com/profile.php?id=100083758572705',
+    instagram: null,
+    openingHours: null,                // aucun horaire structuré publié
+    description: "De la viande de porc grillée à la broche sur du charbon de bois. Livraison possible, matins et soirs. Autres contacts : +226 71 54 10 41 et +226 77 68 95 20.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
