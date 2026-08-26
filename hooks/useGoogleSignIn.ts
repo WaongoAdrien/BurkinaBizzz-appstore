@@ -16,6 +16,7 @@ import {
   GOOGLE_IOS_CLIENT_ID,
   GOOGLE_WEB_CLIENT_ID,
   GOOGLE_ANDROID_CLIENT_ID,
+  GOOGLE_IOS_URL_SCHEME,
 } from '../lib/googleAuth';
 
 // Referme l'onglet d'authentification au retour dans l'app.
@@ -26,10 +27,19 @@ export function useGoogleSignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Sur iOS, expo-auth-session déduirait l'URI de retour du bundle ID
+  // (`com.burkinabizz.app:/oauthredirect`) — or ce schéma n'est pas déclaré dans
+  // app.json, donc Google n'aurait aucun moyen de revenir dans l'app. On force
+  // le schéma « client ID inversé », celui qui EST déclaré dans
+  // ios.infoPlist.CFBundleURLTypes et que les clients OAuth iOS de Google
+  // acceptent nativement.
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     webClientId: GOOGLE_WEB_CLIENT_ID,
+    ...(Platform.OS === 'ios'
+      ? { redirectUri: `${GOOGLE_IOS_URL_SCHEME}:/oauthredirect` }
+      : {}),
   });
 
   // Android n'a pas encore de client OAuth (empreinte SHA-1 requise) : on désactive
