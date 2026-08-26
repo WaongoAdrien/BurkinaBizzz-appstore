@@ -30,15 +30,18 @@ registerTranslations({
 
 export default function PendingScreen() {
   const router = useRouter();
-  const { user, userProfile, isApprovedVendor, isAdmin, signOut } = useAuth();
+  const { user, userProfile, isApprovedVendor, isAdmin, signOut, needsProfileCompletion } = useAuth();
   const { theme } = useColorTheme();
   const { t } = useTranslation();
 
   // Auto-redirect the moment admin approves (real-time listener in AuthContext)
   useEffect(() => {
     if (!user) { router.replace('/auth'); return; }
+    // Un compte Google sans téléphone ne doit pas atteindre l'espace vendeur,
+    // quel que soit le chemin d'arrivée (reprise de session, lien direct…).
+    if (needsProfileCompletion) { router.replace('/complete-profile'); return; }
     if (isApprovedVendor || isAdmin) { router.replace('/vendor/dashboard'); }
-  }, [isApprovedVendor, isAdmin, user]);
+  }, [isApprovedVendor, isAdmin, user, needsProfileCompletion]);
 
   const handleSignOut = async () => {
     await signOut();

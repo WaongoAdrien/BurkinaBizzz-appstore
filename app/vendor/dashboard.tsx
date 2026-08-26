@@ -51,7 +51,7 @@ type Tab = 'businesses' | 'products' | 'liked';
 
 export default function VendorDashboardScreen() {
   const router = useRouter();
-  const { user, userProfile, isAdmin, isPending } = useAuth();
+  const { user, userProfile, isAdmin, isPending, needsProfileCompletion } = useAuth();
   const { theme, isDark } = useColorTheme();
   const { likedProducts: likedBusinesses, unlike, loading: likesLoading } = useLikes(user?.uid);
 
@@ -66,8 +66,10 @@ export default function VendorDashboardScreen() {
 
   useEffect(() => {
     if (!user) { router.replace('/'); return; }
+    // Même garde que sur l'écran d'attente : pas d'accès vendeur sans téléphone.
+    if (needsProfileCompletion) { router.replace('/complete-profile'); return; }
     if (isPending) { router.replace('/vendor/pending'); return; }
-  }, [user, isPending]);
+  }, [user, isPending, needsProfileCompletion]);
 
   useEffect(() => {
     if (!user) return;
