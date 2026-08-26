@@ -65,6 +65,7 @@ function RootStack() {
         <Stack.Screen name="evenement/[id]" options={{ title: t('Événement'), headerShown: true }} />
         <Stack.Screen name="auth" options={{ title: t('Connexion'), presentation: 'modal' }} />
         <Stack.Screen name="forgot-password" options={{ title: t('Mot de passe oublié'), presentation: 'modal' }} />
+        <Stack.Screen name="complete-profile" options={{ title: t('Compléter mon profil'), headerBackVisible: false }} />
         <Stack.Screen name="liked" options={{ title: t('Favoris ❤️') }} />
         <Stack.Screen name="settings" options={{ title: t('Paramètres') }} />
         <Stack.Screen name="vendor/dashboard" options={{ title: t('Mon espace') }} />

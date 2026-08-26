@@ -22,7 +22,14 @@
         "NSPhotoLibraryUsageDescription": "BurkinaBizz a besoin de vos photos pour importer des images.",
         "NSLocationWhenInUseUsageDescription": "BurkinaBizz utilise votre position pour vous aider à localiser votre entreprise sur la carte.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIDesignRequiresCompatibility": true
+        "UIDesignRequiresCompatibility": true,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.189748903908-d0t2q0gdl34nees567cnqk31n4sbj503"
+            ]
+          }
+        ]
       }
     },
     "android": {

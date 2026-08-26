@@ -1,6 +1,6 @@
 // app/auth.tsx — AuthScreen
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,8 +15,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../lib/AuthContext';
+import { useGoogleSignIn } from '../hooks/useGoogleSignIn';
 import { Colors } from '../constants';
 import { useColorTheme } from '../hooks/useColorTheme';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
@@ -44,6 +45,8 @@ registerTranslations({
   'Votre compte sera examiné par notre équipe avant activation. Vous recevrez une confirmation.':
     'Your account will be reviewed by our team before activation. You will receive a confirmation.',
   'Se connecter': 'Sign in',
+  'ou': 'or',
+  'Continuer avec Google': 'Continue with Google',
   'Soumettre ma demande': 'Submit my request',
   'Mot de passe oublié →': 'Forgot password →',
   "En continuant, vous acceptez les conditions d'utilisation de BurkinaBizz.":
@@ -100,7 +103,8 @@ function Field({
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, userProfile, needsProfileCompletion } = useAuth();
+  const google = useGoogleSignIn();
   const { theme } = useColorTheme();
   const { t } = useTranslation();
 
@@ -114,6 +118,20 @@ export default function AuthScreen() {
   const [errors, setErrors] = useState<{
     name?: string; phone?: string; email?: string; password?: string;
   }>({});
+
+  // Le flux Google se termine dans AuthContext, pas dans handleSubmit : on
+  // redirige donc depuis l'état d'authentification. Un profil sans téléphone
+  // passe d'abord par l'écran de complément.
+  useEffect(() => {
+    if (!user || !userProfile) return;
+    if (needsProfileCompletion) {
+      router.replace('/complete-profile');
+    } else if (userProfile.role === 'pending') {
+      router.replace('/vendor/pending');
+    } else {
+      router.replace('/vendor/dashboard');
+    }
+  }, [user, userProfile, needsProfileCompletion]);
 
   const validate = (): boolean => {
     const e: typeof errors = {};
@@ -287,6 +305,35 @@ export default function AuthScreen() {
             )}
           </TouchableOpacity>
 
+          {/* Google sign-in — même bouton pour se connecter et créer un compte,
+              Google ne distinguant pas les deux. */}
+          {google.available && (
+            <>
+              <View style={styles.dividerRow}>
+                <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+                <Text style={[styles.dividerText, { color: theme.textSecondary }]}>{t('ou')}</Text>
+                <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.googleBtn, google.loading && { opacity: 0.7 }]}
+                onPress={google.signIn}
+                disabled={google.loading || loading}
+                activeOpacity={0.85}
+              >
+                {google.loading ? (
+                  <ActivityIndicator color="#1A1A1A" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="logo-google" size={20} color="#1A1A1A" />
+                    <Text style={styles.googleText}>{t('Continuer avec Google')}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {google.error ? <Text style={styles.errorText}>{google.error}</Text> : null}
+            </>
+          )}
 
           {/* Forgot password link (login only) */}
           {isLogin && (
@@ -340,6 +387,14 @@ const styles = StyleSheet.create({
   input: { flex: 1, paddingVertical: 13, fontSize: 15 },
   eyeBtn: { padding: 4 },
   errorText: { color: '#D32F2F', fontSize: 12, marginTop: 4 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, marginBottom: 16 },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 12 },
+  googleBtn: {
+    backgroundColor: '#FFFFFF', borderRadius: 7, borderWidth: 1.5, borderColor: '#9CA3AF',
+    paddingVertical: 13, alignItems: 'center', justifyContent: 'center',
+  },
+  googleText: { color: '#1A1A1A', fontSize: 15, fontWeight: '400' },
   forgotBtn: { alignSelf: 'flex-end', paddingVertical: 6, marginBottom: 8 },
   forgotText: { fontSize: 13, fontWeight: '400', margin: 'auto', textDecorationLine: 'underline' },
   approvalNote: {

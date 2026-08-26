@@ -9,6 +9,8 @@ import {
   deleteUser as firebaseDeleteUser,
   User as FirebaseUser,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithCredential,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
@@ -30,6 +32,12 @@ interface AuthContextType {
   deleteAccount: () => Promise<void>;
   signUp: (email: string, password: string, name: string, phone: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Échange un id_token Google contre une session Firebase. */
+  signInWithGoogle: (idToken: string) => Promise<void>;
+  /** Renseigne le téléphone manquant après une première connexion Google. */
+  completeProfile: (phone: string, name?: string) => Promise<void>;
+  /** Vrai quand le compte existe mais n'a pas encore de téléphone. */
+  needsProfileCompletion: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -105,10 +113,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserProfile(profile);
   };
 
+  // Google ne fournit que le nom et l'e-mail — jamais de téléphone. Le profil est
+  // donc créé sans, et l'app redirige vers /complete-profile tant qu'il manque.
+  const signInWithGoogle = async (idToken: string) => {
+    const credential = GoogleAuthProvider.credential(idToken);
+    const { user: googleUser } = await signInWithCredential(auth, credential);
+
+    const ref = doc(db, 'users', googleUser.uid);
+    const snap = await getDoc(ref);
+
+    // Compte déjà connu (inscription e-mail antérieure avec la même adresse, ou
+    // reconnexion Google) : on ne réécrit rien, pour ne pas écraser son rôle.
+    if (snap.exists()) {
+      setUserProfile(snap.data() as User);
+      return;
+    }
+
+    const profile: User = {
+      uid: googleUser.uid,
+      name: googleUser.displayName || '',
+      email: googleUser.email || '',
+      phone: '',
+      role: googleUser.uid === ADMIN_UID ? 'admin' : 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await setDoc(ref, profile);
+    setUserProfile(profile);
+  };
+
+  const completeProfile = async (phone: string, name?: string) => {
+    if (!user) throw new Error('Aucun utilisateur connecté');
+    const updates: Partial<User> = { phone: phone.trim() };
+    if (name?.trim()) updates.name = name.trim();
+
+    await setDoc(doc(db, 'users', user.uid), updates, { merge: true });
+    if (name?.trim()) await updateProfile(user, { displayName: name.trim() });
+    setUserProfile(prev => (prev ? { ...prev, ...updates } : prev));
+  };
+
   const signOut = async () => {
     await firebaseSignOut(auth);
     setUserProfile(null);
   };
+
+  // Un profil sans téléphone vient forcément d'une inscription Google : le
+  // formulaire e-mail, lui, l'exige. On bloque donc l'accès vendeur tant qu'il manque.
+  const needsProfileCompletion = !!user && !!userProfile && !userProfile.phone?.trim();
 
   const isAdmin = userProfile?.role === 'admin';
   const isPending = userProfile?.role === 'pending';
@@ -119,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, userProfile, loading,
       isAdmin, isPending, isApprovedVendor,
       signIn, signUp, signOut, deleteAccount,
+      signInWithGoogle, completeProfile, needsProfileCompletion,
     }}>
       {children}
     </AuthContext.Provider>
