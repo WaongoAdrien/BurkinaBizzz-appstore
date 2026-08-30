@@ -1,7 +1,7 @@
 // app/more.tsx — Categories, submit business, contact & how it works
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Animated, Easing } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Linking, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,6 +18,10 @@ registerTranslations({
   'Négociez le prix directement sur WhatsApp': 'Negotiate the price directly on WhatsApp',
   'Applications utiles au Burkina Faso': 'Useful applications in Burkina Faso',
   'Les meilleures apps': 'The best apps for living in and visiting the country',
+  'Sites touristiques': 'Tourist sites',
+  'À voir au Burkina': 'Must-see places',
+  'Événements': 'Events',
+  'Festivals et rendez-vous': 'Festivals and gatherings',
   'Vous avez une entreprise?': 'Do you have a business?',
   "Référencez-la gratuitement dans l'annuaire": 'List it for free in the directory',
   'Nous contacter sur WhatsApp': 'Contact us on WhatsApp',
@@ -31,10 +35,43 @@ registerTranslations({
   'Ajoutez vos entreprises préférées aux favoris': 'Add your favorite businesses to your favorites',
 });
 
+// Images des deux tuiles carrées. Ce sont les mêmes visuels que ceux déjà
+// utilisés par l'écran Événements (hero + encart tourisme), pour rester cohérent.
+const TOURISM_TILE_IMAGE = require('../assets/tourism.png');
+const EVENTS_TILE_IMAGE = require('../assets/imageindex.png');
+
 // ── Your contact number ───────────────────────────────────────────────────────
 const CONTACT_WHATSAPP = '+1 646 478 6515'; // 👈 Replace with your real number
 const CONTACT_MESSAGE  = 'Bonjour! Je souhaite référencer mon entreprise sur BurkinaBizz 🇧🇫';
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Tuile carrée illustrée : image de fond, dégradé sombre en bas pour garder le
+// texte lisible quelle que soit la photo, puis pastille d'icône + libellés.
+function PhotoTile({ image, iconName, title, subtitle, onPress }: {
+  image: any;
+  iconName: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity style={styles.tile} onPress={onPress} activeOpacity={0.85}>
+      <Image source={image} style={styles.tileImage} resizeMode="cover" />
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.78)']}
+        style={styles.tileScrim}
+      />
+      <View style={styles.tileContent}>
+        <View style={styles.tileIconBadge}>
+          <Ionicons name={iconName as any} size={16} color="#fff" />
+        </View>
+        <Text style={styles.tileTitle} numberOfLines={2}>{t(title)}</Text>
+        <Text style={styles.tileSub} numberOfLines={1}>{t(subtitle)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 function StepCard({ step, index, theme, onPress }: {
   step: { iconName: string; title: string; desc: string; color: string };
@@ -150,6 +187,24 @@ export default function MoreScreen() {
             <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
           </TouchableOpacity>
 
+          {/* TOURISM + EVENTS SQUARE TILES */}
+          <View style={styles.tileRow}>
+            <PhotoTile
+              image={TOURISM_TILE_IMAGE}
+              iconName="camera"
+              title="Sites touristiques"
+              subtitle="À voir au Burkina"
+              onPress={() => router.push('/tourism-sites')}
+            />
+            <PhotoTile
+              image={EVENTS_TILE_IMAGE}
+              iconName="calendar"
+              title="Événements"
+              subtitle="Festivals et rendez-vous"
+              onPress={() => router.push('/evenement')}
+            />
+          </View>
+
           {/* SUBMIT BUSINESS CTA */}
           <TouchableOpacity
             onPress={() => router.push(user ? '/vendor/add-business' : '/auth')}
@@ -221,6 +276,26 @@ const styles = StyleSheet.create({
   categoriesLinkIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.cta + '22', alignItems: 'center', justifyContent: 'center' },
   categoriesLinkTitle: { fontSize: 15, fontWeight: '400', marginBottom: 2 },
   categoriesLinkSub: { fontSize: 12 },
+  // ── Tuiles carrées (tourisme / événements) ────────────────────────────────
+  // `flex: 1` + `aspectRatio: 1` : chaque tuile prend la moitié de la largeur
+  // disponible et reste parfaitement carrée quelle que soit la taille d'écran.
+  tileRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  tile: {
+    flex: 1, aspectRatio: 1, borderRadius: 10, overflow: 'hidden',
+    backgroundColor: '#d8dee4',   // visible le temps que l'image se charge
+    elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12, shadowRadius: 4,
+  },
+  tileImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
+  tileScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '70%' },
+  tileContent: { position: 'absolute', left: 12, right: 12, bottom: 12 },
+  tileIconBadge: {
+    width: 30, height: 30, borderRadius: 15, marginBottom: 8,
+    backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center',
+  },
+  tileTitle: { color: '#fff', fontSize: 14, fontWeight: '400', lineHeight: 18 },
+  tileSub: { color: 'rgba(255,255,255,0.85)', fontSize: 11, marginTop: 2 },
+
   submitCtaWrap: { marginBottom: 24, borderRadius: 10, elevation: 6, shadowColor: Colors.headerGradient[0], shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 10 },
   submitCta: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 18, gap: 14 },
   submitCtaIconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },

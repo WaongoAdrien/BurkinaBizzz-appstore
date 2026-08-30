@@ -13,7 +13,7 @@ import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 registerTranslations({
   'Accueil': 'Home',
   'Annuaire': 'Directory',
-  'Tourisme': 'Tourism',
+  'Découvrir': 'Discover',
   'Mon espace': 'My space',
   'Connexion': 'Sign in',
   'Paramètres': 'Settings',
@@ -47,7 +47,7 @@ export function TabBar() {
   const tabs = [
     { name: 'Accueil', icon: 'home', path: '/' },
     { name: 'Annuaire', icon: 'search', path: '/annuaire' },
-    { name: 'Tourisme', icon: 'camera', path: '/tourism-sites' },
+    { name: 'Découvrir', icon: 'compass', path: '/more' },
     { name: user ? 'Mon espace' : 'Connexion', icon: user ? 'person' : 'log-in', path: user ? '/vendor/dashboard' : '/auth' },
     { name: 'Paramètres', icon: 'settings', path: '/settings' },
   ];

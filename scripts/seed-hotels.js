@@ -108,6 +108,223 @@ const VENUES = [
     description: 'Hôtel de charme à Zogona, Ouagadougou.',
     relatedBusinessId: 'villa-kaya',
   },
+  {
+    // Sources : page Facebook officielle + site hoteland-bf.com.
+    // L'adresse est publiée sous forme de Plus Code sur le site ; les
+    // coordonnées viennent de sa résolution, qui tombe bien à Ouaga 2000.
+    name: 'Complexe Hôtelier AnD',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Ouaga 2000 (7GV7+F28), Ouagadougou',
+    latitude: 12.2936625, longitude: -1.4874219,
+    phone: '+226 05 22 02 02',
+    whatsapp: '+226 05 22 02 02',      // numéro WhatsApp affiché tel quel sur le site
+    facebook: 'https://www.facebook.com/profile.php?id=61559526430454',
+    instagram: null,
+    website: 'https://hoteland-bf.com',
+    // Facebook indique « Always open » et le site annonce une réception 24h/24.
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Hôtel-restaurant de Ouaga 2000. Trois catégories de chambres, petit-déjeuner inclus : Standard à 37 500 FCFA, Privilège à 42 500 FCFA et Prestige à 50 000 FCFA la nuit. Réception ouverte 24h/24, room-service, conciergerie et petit-déjeuner servi de 7h15 à 11h en salle ou en chambre. Terrasse panoramique au 3e étage, bar et restaurant sur place.",
+  },
+  {
+    // Source : page Facebook officielle.
+    name: 'Welcome Lodge',
+    address: 'Ouaga 2000, non loin du Monument des Martyrs, Ouagadougou',
+    // Deux fiches « Welcome Lodge » distinctes existent sur Google Maps sans
+    // moyen de trancher laquelle correspond à cette page : coordonnées laissées
+    // nulles plutôt que de risquer un point erroné sur la carte.
+    latitude: null, longitude: null,
+    phone: '+226 65 80 94 85',
+    // Le bouton WhatsApp de la page pointe vers un autre numéro que le
+    // téléphone affiché — les deux sont donc renseignés séparément.
+    whatsapp: '+226 60 60 15 07',
+    facebook: 'https://www.facebook.com/welcomelodgeouaga',
+    instagram: null,
+    // welcome-lodgebf.com est enregistré mais non exploité : le domaine
+    // n'affiche que la page d'attente du registrar LWS.
+    website: null,
+    // Facebook indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Résidence de charme au cœur de Ouaga 2000, à proximité du Monument des Martyrs. Cadre sécurisé et accueil disponible 24h/24.",
+  },
+  {
+    // Sources : page Facebook officielle + site palmbeach-burkina.com.
+    // Coordonnées : fiche Google Maps « Hotel Palm Beach », confirmée par le
+    // téléphone identique à celui publié sur Facebook et sur le site.
+    name: 'Palm Beach Hôtel',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: "Avenue Kwamé N'Krumah, Ouagadougou",
+    latitude: 12.362092, longitude: -1.5182527,
+    phone: '+226 25 31 09 91',
+    // Ligne fixe, aucun numéro WhatsApp publié.
+    whatsapp: null,
+    facebook: 'https://www.facebook.com/PalmBeachHotelOuaga',
+    instagram: null,
+    website: 'https://palmbeach-burkina.com',
+    // Facebook indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Hôtel 3 étoiles de l'avenue Kwamé N'Krumah, au centre de Ouagadougou. Chambres standard rénovées, chambres privilège et suites ministérielles, toutes équipées d'une salle de bain, d'un téléphone avec ligne directe, d'une télévision (plus de 20 chaînes), d'un mini-bar et d'une radio ; les suites disposent en plus d'un salon. Piscine, Wi-Fi et parking gratuits, bar-restaurant et trois salles de réunion pour conférences et séminaires. Tarifs publiés par l'hôtel : de 50 000 FCFA la chambre standard single à 125 000 FCFA la suite ministérielle double, petit-déjeuner buffet à 5 000 FCFA.",
+  },
+  {
+    // Source : page Facebook officielle (aucune autre source publique trouvée).
+    name: 'Résidence La Palmeraie Ouaga',
+    address: 'Avenue du Prof. Joseph Ki-Zerbo, Ouagadougou',
+    // Établissement absent de Google Maps : coordonnées laissées nulles.
+    latitude: null, longitude: null,
+    phone: '+226 25 30 48 90',
+    // Ligne fixe, aucun numéro WhatsApp publié.
+    whatsapp: null,
+    facebook: 'https://www.facebook.com/profile.php?id=100069818692170',
+    instagram: null,
+    // fortandem.com est annoncé sur la page Facebook mais le domaine ne résout
+    // plus (aucun enregistrement DNS) : lien volontairement omis.
+    website: null,
+    // Facebook indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Résidence hôtelière de l'avenue du Professeur Joseph Ki-Zerbo, à Ouagadougou. Elle compte 27 chambres réparties en 5 catégories, de la Standard à la Suite Junior.",
+  },
+  {
+    // Sources : page Facebook officielle + fiche Google Maps « Cocody + ».
+    // Identification de la fiche Maps corroborée par deux éléments : le quartier
+    // (Bilbalogho) et la distance au stade Municipal — 250 m, ce qui recoupe le
+    // « non loin du stade Municipal » annoncé par l'établissement lui-même.
+    // Réserve : Google Maps affiche un autre numéro (+226 78 00 36 82), sans
+    // doute périmé (avis vieux de 5 à 6 ans) ; on retient celui de Facebook.
+    name: 'Cocody Plus Ouaga',
+    categories: ['Hôtellerie', 'Restauration', 'Soirées'],
+    address: 'Bilbalogho, non loin du stade Municipal (9F69+GC), Ouagadougou',
+    latitude: 12.3612587, longitude: -1.5314043,
+    phone: '+226 54 08 08 06',
+    whatsapp: '+226 61 28 67 67',     // numéro du bouton WhatsApp de la page
+    facebook: 'https://www.facebook.com/Cocodyplus',
+    instagram: null,
+    // cocodyplus.com et cocosyplus.com (annoncé sur Maps) ne résolvent ni l'un
+    // ni l'autre : aucun site exploitable.
+    website: null,
+    // « Open 24 hours » sur Google Maps ; Facebook ne publie pas d'horaires.
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Complexe réunissant chambres d'hôtes, spa, restaurant et bar lounge, à Bilbalogho, à quelques pas du stade Municipal. Massages et prestations bien-être, restauration sur place, à emporter ou en livraison, et espace accueillant réceptions et cérémonies.",
+  },
+  {
+    // Source : fiche Google Maps « Palace HOTEL » (3 étoiles, 893 avis).
+    name: 'Palace Hôtel',
+    address: 'Ouaga 2000 (8F4C+HMP), Ouagadougou',
+    latitude: 12.3064745, longitude: -1.5282857,
+    phone: '+226 25 37 50 60',
+    whatsapp: null,
+    facebook: null,
+    instagram: null,
+    // Google Maps renvoie vers une page Google Sites au nom de l'hôtel, mais ses
+    // boutons « BOOK NOW » pointent tous vers une recherche Booking.com avec un
+    // identifiant d'affiliation (aid=1224331) — et sur la ville entière, pas sur
+    // cet hôtel. Il s'agit donc d'une page d'affiliation tierce, pas du site de
+    // l'établissement : lien volontairement omis.
+    website: null,
+    // Réception annoncée 24h/24.
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Hôtel 3 étoiles de Ouaga 2000. Chambres climatisées équipées d'un minibar et d'un réfrigérateur. Réception ouverte 24h/24, service en chambre, consigne à bagages et blanchisserie. Piscine extérieure, Wi-Fi, petit-déjeuner et parking gratuits. Arrivée et départ à 12h.",
+  },
+  {
+    // Sources : page Facebook officielle + fiche Google Maps « Hotel Timbila »
+    // (3 étoiles, 172 avis), dont le téléphone est identique à celui de Facebook.
+    // Pabré est à une quinzaine de kilomètres au nord de Ouagadougou ; Google
+    // Maps rattache d'ailleurs l'adresse à Ouagadougou, comme les fiches
+    // existantes de Gampela, Loumbila ou Saponé.
+    name: 'Hôtel Timbila',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Route N22, Pabré (GC2M+RF), Ouagadougou',
+    latitude: 12.5021207, longitude: -1.5663581,
+    phone: '+226 70 29 70 00',
+    whatsapp: '+226 70 29 70 00',      // bouton WhatsApp de la page : même numéro
+    facebook: 'https://www.facebook.com/profile.php?id=100063499542507',
+    instagram: null,
+    // hoteltimbila.com est annoncé sur la page Facebook mais le domaine ne
+    // résout plus (aucun enregistrement DNS) : lien volontairement omis.
+    website: null,
+    // Facebook indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Hôtel 3 étoiles installé à l'entrée de Pabré, au nord de Ouagadougou, dans un cadre verdoyant. L'établissement dispose d'un restaurant, d'un bar, d'une pizzeria, d'une piscine et d'une salle de conférence.",
+  },
+  {
+    // Sources : page Facebook officielle, site hotelresidenceprestige.com et
+    // fiche Google Maps, dont le téléphone est identique à celui de Facebook.
+    name: 'Hôtel Résidence Prestige',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Ouaga 2000, Ouagadougou',
+    latitude: 12.3111047, longitude: -1.506337,
+    phone: '+226 25 37 43 20',
+    whatsapp: null,                    // aucun numéro WhatsApp publié
+    facebook: 'https://www.facebook.com/profile.php?id=100064227872114',
+    instagram: null,
+    website: 'https://hotelresidenceprestige.com',
+    // Facebook indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Hôtel 3 étoiles au cœur de Ouaga 2000, le quartier d'affaires et résidentiel de Ouagadougou. Il compte 35 chambres et suites climatisées réparties en trois catégories — standard, suite junior et suite prestige — équipées d'un mini-bar, d'un téléviseur plasma avec abonnement Canal+, d'un détecteur de fumée et d'un accès Wi-Fi haut débit gratuit. Bar-restaurant proposant une cuisine africaine, européenne et asiatique, service traiteur pour séminaires et cérémonies, et salle de réunion/banquet.",
+  },
+  {
+    // Sources : page Facebook officielle + fiche Google Maps.
+    // Les coordonnées viennent du lien Maps que l'établissement publie
+    // lui-même dans le champ adresse de sa page Facebook.
+    name: 'Village Nong Taaba',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Ouaga 2000 (8G58+48C), Ouagadougou',
+    latitude: 12.3062498, longitude: -1.4818459,
+    // Deux lignes existent : Facebook affiche le 25 46 00 93 en bouton d'appel,
+    // Google Maps le 25 46 00 92. On retient celle mise en avant par la page.
+    phone: '+226 25 46 00 93',
+    whatsapp: null,                    // aucun numéro WhatsApp publié
+    facebook: 'https://www.facebook.com/profile.php?id=100089731410469',
+    instagram: null,
+    website: null,                     // aucun site web publié
+    // Facebook indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Complexe hôtelier de Ouaga 2000 réunissant hébergement, restaurant, bar, piscine, spa et espace cérémonial. Cadre paisible et architecture traditionnelle, avec Wi-Fi, parking gratuit, piscine extérieure et service de blanchisserie. L'établissement accueille aussi les familles.",
+  },
+  {
+    // Sources : site chezgiuliana.com (à jour, mention de copyright 2025) et
+    // fiche Google Maps, dont le téléphone est identique à celui du site.
+    // La page Facebook, elle, n'est plus alimentée depuis des années : elle ne
+    // publie qu'une adresse e-mail, sans téléphone.
+    name: "Maison d'hôtes Chez Giuliana",
+    categories: ['Hôtellerie', 'Résidence meublée'],
+    address: 'Rue Lamine Guye, porte 733, 1200 Logements, Ouagadougou',
+    latitude: 12.3643302, longitude: -1.4951026,
+    phone: '+226 25 46 46 36',
+    whatsapp: null,                    // aucun numéro WhatsApp publié
+    facebook: 'https://www.facebook.com/profile.php?id=100057320655940',
+    instagram: null,
+    website: 'https://www.chezgiuliana.com',
+    openingHours: null,                // aucun horaire publié
+    description: "Maison d'hôtes du quartier résidentiel des 1200 Logements, entre l'aéroport et le centre-ville. Chambres climatisées et individuellement décorées, équipées de moustiquaires, avec Wi-Fi gratuit et petit-déjeuner servi sur la terrasse panoramique. Groupe électrogène et réservoirs d'eau assurent électricité et eau en continu. Services : restaurant avec livraison, cuisine commune, bibliothèque et salle de réunion, pressing, parking gratuit, transfert aéroport et location de 4x4. La maison loue également deux villas meublées pour les longs séjours, tout compris : la villa Wemtem (2 chambres) à 35 000 FCFA la journée, minimum deux semaines, ou 650 000 FCFA le mois, et la villa Gianni (deux studios et un appartement) à 45 000 FCFA la journée. Second numéro : +226 75 32 75 32.",
+  },
+  {
+    // Sources : page Facebook officielle + fiche Google Maps, dont le téléphone
+    // est identique. Les coordonnées viennent du lien Maps que l'établissement
+    // publie lui-même dans ses publications.
+    // Réserve : Facebook annonce « Always open » tandis que Google indique une
+    // fermeture à minuit. On retient la déclaration de l'établissement, la fiche
+    // Google n'étant pas revendiquée (« Claim this business »).
+    name: 'Première Classe +',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Ouaga 2000 (8G64+Q7), Ouagadougou',
+    latitude: 12.3119742, longitude: -1.4942768,
+    phone: '+226 55 96 96 42',
+    whatsapp: '+226 55 96 96 42',      // bouton WhatsApp de la page : même numéro
+    facebook: 'https://www.facebook.com/premiereclasseplus',
+    instagram: null,
+    website: null,                     // aucun site web publié
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Complexe de Ouaga 2000 réunissant chambres d'hôtes, spa, piscine, restaurant lounge, espace événementiel et salle de conférence. L'adresse s'adresse aussi bien aux séjours de détente qu'aux séminaires et réunions professionnelles.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {

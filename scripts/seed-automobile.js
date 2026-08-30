@@ -59,6 +59,28 @@ const VENUES = [
     description: "Exportateur de véhicules d'occasion et de pièces détachées basé en Corée du Sud, qui expédie à l'international. Commande depuis le Burkina Faso via leur catalogue en ligne ou WhatsApp. Contact en Corée du Sud (+82).",
     relatedBusinessId: 'orbis-auto',
   },
+  {
+    // Sources : page Facebook officielle, site merveillemotors.com et fiche
+    // Google Maps « Merveille Motors » (MG dealer). Identification confirmée
+    // trois fois : même téléphone, même site et même boîte postale
+    // (01 BP 1920 Ouaga 01) sur les trois sources.
+    // Le quartier vient du site ; la boîte postale seule ne localise rien.
+    name: 'Merveille Motors',
+    address: 'Boinsyaaré (9F9X+H9), Ouagadougou',
+    latitude: 12.368914, longitude: -1.5015076,
+    phone: '+226 70 20 98 77',
+    whatsapp: '+226 70 20 98 77',      // bouton WhatsApp de la page : même numéro
+    facebook: 'https://www.facebook.com/profile.php?id=61569325487976',
+    // Pas de compte Instagram : l'enseigne est sur TikTok
+    // (@merveille.motors.burkina) et LinkedIn, deux réseaux que le schéma
+    // Business ne prévoit pas.
+    instagram: null,
+    website: 'https://merveillemotors.com',
+    // Google ne donne qu'une heure d'ouverture (8h le lundi), sans heure de
+    // fermeture ni détail de la semaine : laissé null.
+    openingHours: null,
+    description: "Distributeur agréé de la marque MG au Burkina Faso, installé à Boinsyaaré. La gamme présentée compte une quatorzaine de modèles — berlines et SUV en motorisation thermique, hybride et électrique, dont les MG GT, HS, HS Hybrid, MG ONE, RX9 et Whale. L'enseigne assure la vente, l'accompagnement commercial, le service après-vente et la fourniture de pièces détachées.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
