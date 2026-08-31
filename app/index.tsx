@@ -25,9 +25,11 @@ registerTranslations({
   'Hôtels, restaurants et adresses incontournables 🏨': 'Hotels, restaurants and must-visit spots 🏨',
   'Une nature à couper le souffle': 'Breathtaking nature',
   'Parcs, réserves et paysages sauvages du Burkina Faso 🐘': "Parks, reserves and wild landscapes of Burkina Faso 🐘",
+  'Naaba Koom, Ouagadougou': 'Naaba Koom, Ouagadougou',
+  'Un monument emblématique de la capitale 🏛️': 'An iconic landmark of the capital 🏛️',
   'BurkinaBizz 2026 — Gratuit et ne vend aucun produit.': 'BurkinaBizz 2026 — Free to use and does not sell any product.',
   'Découvrir le Burkina Faso': 'Discover Burkina Faso',
-  'Entreprises locales': 'Local businesses',
+  'Découvrir': 'Discover',
   'Événements locaux': 'Local events',
   'À propos du Burkina': 'About Burkina',
   'Sites touristiques': 'Tourist sites',
@@ -46,9 +48,10 @@ registerTranslations({
 const HERO_IMAGE = require('../assets/indeximage.png');
 const HOTEL_IMAGE = require('../assets/hotel.png');
 const NATURE_IMAGE = require('../assets/indeximage3.png');
+const NAABA_KOOM_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/naaba-koom.jpg' };
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SLIDE_COUNT = 4;
+const SLIDE_COUNT = 5;
 const SLIDE_INTERVAL_MS = 5000;
 
 // Maps Open-Meteo WMO weather codes to an icon + French label.
@@ -235,7 +238,23 @@ export default function HomeScreen() {
                 </LinearGradient>
               </View>
 
-              {/* SLIDE 4: WEATHER & TIME */}
+              {/* SLIDE 4: NAABA KOOM */}
+              <View style={{ width: heroWidth, height: '100%' }}>
+                <Image
+                  source={NAABA_KOOM_IMAGE}
+                  style={styles.heroImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.65)']}
+                  style={styles.heroOverlay}
+                >
+                  <Text style={styles.heroTitle}>{t('Naaba Koom, Ouagadougou')}</Text>
+                  <Text style={styles.heroSubtitle}>{t('Un monument emblématique de la capitale 🏛️')}</Text>
+                </LinearGradient>
+              </View>
+
+              {/* SLIDE 5: WEATHER & TIME */}
               <View style={{ width: heroWidth, height: '100%' }}>
                 <LinearGradient
                   colors={['#aebfdf', '#103670']}
@@ -271,7 +290,7 @@ export default function HomeScreen() {
         {/* CARD GRID */}
         <View style={styles.cardGrid}>
           {[
-            { icon: 'compass-outline', title: 'Entreprises locales', onPress: () => router.push('/more'), accent: '#2B617C', gradient: ['#76afc9', '#4e6aad'] },
+            { icon: 'compass-outline', title: 'Découvrir', onPress: () => router.push('/more'), accent: '#2B617C', gradient: ['#76afc9', '#4e6aad'] },
             { icon: 'megaphone-outline', title: 'Événements locaux', onPress: () => router.push('/evenement'), accent: '#8A6D1F', gradient: ['#bcb296', '#ae924b'] },
             { icon: 'earth-outline', title: 'À propos du Burkina', onPress: () => router.push('/about-burkina'), accent: '#2E7D32', gradient: ['#84b88c', '#59b851'] },
             { icon: 'camera-outline', title: 'Sites touristiques', onPress: () => router.push('/tourism-sites'), accent: '#B3492F', gradient: ['#d8c3c0', '#dfa398'] },

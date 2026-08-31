@@ -12,12 +12,14 @@ import { ContentContainer } from '../components/ContentContainer';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
-  'Entreprise par Catégorie': 'Business by Category',
+  'Entreprises': 'Businesses',
   'Voir toutes les catégories': 'Browse all categories',
   'Produits à vendre': 'Products for sale',
-  'Négociez le prix directement sur WhatsApp': 'Negotiate the price directly on WhatsApp',
-  'Applications utiles au Burkina Faso': 'Useful applications in Burkina Faso',
+  'Négociez sur WhatsApp': 'Negotiate on WhatsApp',
+  'Applications utiles': 'Useful apps',
   'Les meilleures apps': 'The best apps for living in and visiting the country',
+  'Emploi': 'Jobs',
+  'Bientôt disponible': 'Coming soon',
   'Sites touristiques': 'Tourist sites',
   'À voir au Burkina': 'Must-see places',
   'Événements': 'Events',
@@ -39,6 +41,12 @@ registerTranslations({
 // utilisés par l'écran Événements (hero + encart tourisme), pour rester cohérent.
 const TOURISM_TILE_IMAGE = require('../assets/tourism.png');
 const EVENTS_TILE_IMAGE = require('../assets/imageindex.png');
+const JOBS_TILE_IMAGE = require('../assets/images/buildingfasob.jpeg');
+
+// Visuels hébergés (GitHub Pages) pour les tuiles entreprises / marché / apps.
+const BUSINESS_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/liza-mall.jpg' };
+const MARKET_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/market.jpg' };
+const APPS_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/ouaga-echangeur.jpg' };
 
 // ── Your contact number ───────────────────────────────────────────────────────
 const CONTACT_WHATSAPP = '+1 646 478 6515'; // 👈 Replace with your real number
@@ -136,59 +144,42 @@ export default function MoreScreen() {
     <View style={[styles.container, { backgroundColor: '#ecf0f4' }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <ContentContainer maxWidth={600} style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32 }}>
-          {/* TITLE */}
-          <Text style={[styles.appTitle, { color: theme.text }]}>BurkinaBizz</Text>
-
-          {/* CATEGORIES LINK */}
-          <TouchableOpacity
-            style={[styles.categoriesLink, { backgroundColor: theme.card, borderColor: theme.border }]}
-            onPress={() => router.push('/categories')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.categoriesLinkIcon}>
-              <Ionicons name="grid" size={22} color={Colors.cta} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Entreprise par Catégorie')}</Text>
-              <Text style={[styles.categoriesLinkSub, { color: theme.textSecondary }]}>{t('Voir toutes les catégories')}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
-          </TouchableOpacity>
-
-          {/* MARKETPLACE LINK */}
-          <TouchableOpacity
-            style={[styles.categoriesLink, { backgroundColor: theme.card, borderColor: theme.border }]}
-            onPress={() => router.push('/product-categories')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.categoriesLinkIcon}>
-              <MaterialCommunityIcons name="tag-heart-outline" size={22} color={Colors.cta} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Produits à vendre')}</Text>
-              <Text style={[styles.categoriesLinkSub, { color: theme.textSecondary }]}>{t('Négociez le prix directement sur WhatsApp')}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
-          </TouchableOpacity>
-
-          {/* USEFUL APPLICATIONS LINK */}
-          <TouchableOpacity
-            style={[styles.categoriesLink, { backgroundColor: theme.card, borderColor: theme.border }]}
-            onPress={() => router.push('/applications')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.categoriesLinkIcon}>
-              <Ionicons name="apps" size={22} color={Colors.cta} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.categoriesLinkTitle, { color: theme.text }]}>{t('Applications utiles au Burkina Faso')}</Text>
-              <Text style={[styles.categoriesLinkSub, { color: theme.textSecondary }]}>{t('Les meilleures apps')}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
-          </TouchableOpacity>
-
-          {/* TOURISM + EVENTS SQUARE TILES */}
+          {/* PHOTO TILES */}
           <View style={styles.tileRow}>
+            <PhotoTile
+              image={BUSINESS_TILE_IMAGE}
+              iconName="grid"
+              title="Entreprises"
+              subtitle="Voir toutes les catégories"
+              onPress={() => router.push('/categories')}
+            />
+            <PhotoTile
+              image={MARKET_TILE_IMAGE}
+              iconName="pricetag"
+              title="Produits à vendre"
+              subtitle="Négociez sur WhatsApp"
+              onPress={() => router.push('/product-categories')}
+            />
+          </View>
+
+          <View style={styles.tileRow}>
+            <PhotoTile
+              image={APPS_TILE_IMAGE}
+              iconName="apps"
+              title="Applications utiles"
+              subtitle="Les meilleures apps"
+              onPress={() => router.push('/applications')}
+            />
+            <PhotoTile
+              image={JOBS_TILE_IMAGE}
+              iconName="briefcase"
+              title="Emploi"
+              subtitle="Bientôt disponible"
+              onPress={() => router.push('/emploi')}
+            />
+          </View>
+
+          <View style={[styles.tileRow, { marginBottom: 24 }]}>
             <PhotoTile
               image={TOURISM_TILE_IMAGE}
               iconName="camera"
@@ -270,16 +261,11 @@ export default function MoreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  appTitle: { fontSize: 26, fontWeight: '400', letterSpacing: -0.5, marginBottom: 20, textAlign: 'center' },
   sectionTitle: { fontSize: 18, fontWeight: '400', marginBottom: 14 },
-  categoriesLink: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 8, padding: 16, marginBottom: 24, borderWidth: 1, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  categoriesLinkIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.cta + '22', alignItems: 'center', justifyContent: 'center' },
-  categoriesLinkTitle: { fontSize: 15, fontWeight: '400', marginBottom: 2 },
-  categoriesLinkSub: { fontSize: 12 },
   // ── Tuiles carrées (tourisme / événements) ────────────────────────────────
   // `flex: 1` + `aspectRatio: 1` : chaque tuile prend la moitié de la largeur
   // disponible et reste parfaitement carrée quelle que soit la taille d'écran.
-  tileRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  tileRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   tile: {
     flex: 1, aspectRatio: 1, borderRadius: 10, overflow: 'hidden',
     backgroundColor: '#d8dee4',   // visible le temps que l'image se charge

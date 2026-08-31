@@ -76,6 +76,7 @@ function RootStack() {
         <Stack.Screen name="vendor/pending" options={{ headerShown: false, headerBackTitle: '' }} />
         <Stack.Screen name="admin/index" options={{ title: t('Admin Panel') }} />
         <Stack.Screen name="evenement" options={{ title: t('Événements') }} />
+        <Stack.Screen name="emploi" options={{ title: t('Emploi') }} />
       </Stack>
       <TabBar />
     </View>
