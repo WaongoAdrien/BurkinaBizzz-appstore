@@ -60,6 +60,47 @@ const VENUES = [
     openingHours: null,
     description: "Magasin d'habillement de Ouagadougou, sur deux adresses : le centre-ville, avenue de l'UEMOA derrière Telecel Kwame Nkrumah et à 50 m de l'hôtel Pacific, et les 1200 Logements, en face de Coris Bank. Prêt-à-porter, chaussures et maroquinerie en cuir. Second numéro : +226 62 43 43 43. E-mail : cobyfreeshop@yahoo.fr.",
   },
+  {
+    // Source : page Facebook officielle (facebook.com/fragranceparfumerieouaga),
+    // consultée dans le navigateur — catégorie Facebook « Cosmetics store »,
+    // 86 K abonnés, 84 % de recommandations sur 107 avis. Téléphone et WhatsApp
+    // sont deux numéros distincts, tous deux déclarés dans « Contact info ».
+    name: 'Fragrance Parfumerie Ouaga 2000',
+    categories: ['Shopping', 'Coiffure & Beauté'],
+    // La page ne donne que le quartier et la boîte postale, sans rue.
+    address: 'Ouaga 2000, Ouagadougou (06 BP 9636 Ouagadougou 06)',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 78 21 37 73',
+    whatsapp: '+226 60 33 57 57',
+    facebook: 'https://www.facebook.com/fragranceparfumerieouaga',
+    instagram: null,
+    website: null,                     // aucun site web publié
+    // Facebook n'affiche que « Closed now », sans grille hebdomadaire.
+    openingHours: null,
+    description: "Parfumerie de Ouaga 2000 : parfums de marques et produits cosmétiques. E-mail : fragranceboutik@yahoo.fr.",
+  },
+  {
+    // Source : page Facebook officielle (facebook.com/lebeaupagne), consultée
+    // dans le navigateur — catégorie Facebook « Shopping & retail », 25 K
+    // abonnés. Le même numéro sert de téléphone et de WhatsApp (déclaré dans
+    // les deux champs de « Contact info »).
+    name: 'Le Beau Pagne',
+    categories: ['Shopping', 'Produits Locaux'],
+    // Adresse du champ « Address » de la page ; les publications précisent le
+    // repère : même goudron que l'OCECOS (DGEC) et le lycée Saint-Joseph.
+    address: 'Boulevard Ratag Rima, Samandin, Ouagadougou',
+    // La page publie un lien Google Maps (maps.app.goo.gl/c9Vck619pNQom4ZX9)
+    // mais il pointe vers une fiche sans coordonnées exploitables.
+    latitude: null, longitude: null,
+    phone: '+226 77 39 93 15',
+    whatsapp: '+226 77 39 93 15',
+    facebook: 'https://www.facebook.com/lebeaupagne',
+    instagram: null,                   // seul un compte TikTok est lié
+    website: null,                     // aucun site web publié
+    // Facebook n'affiche que « Closed now », sans grille hebdomadaire.
+    openingHours: null,
+    description: "Boutique de pagnes de Samandin, sur le même goudron que l'OCECOS (DGEC) et le lycée Saint-Joseph. Bogolan, batik, woodin et kente, vendus au complet de trois pagnes. Livraison dans Ouagadougou et expédition partout au Burkina Faso et à l'étranger. TikTok : @lebeaupagne. E-mail : lebeaupagnebf@gmail.com.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
