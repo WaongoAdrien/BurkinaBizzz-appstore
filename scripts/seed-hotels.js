@@ -325,6 +325,23 @@ const VENUES = [
     openingHours: everyDay('00:00', '00:00'),
     description: "Complexe de Ouaga 2000 réunissant chambres d'hôtes, spa, piscine, restaurant lounge, espace événementiel et salle de conférence. L'adresse s'adresse aussi bien aux séjours de détente qu'aux séminaires et réunions professionnelles.",
   },
+  {
+    // Sources : site officiel soniahotels.com (page d'accueil + « Contact us »)
+    // et la page Facebook officielle (facebook.com/SoniaHotelsOuagadougou).
+    // Le site publie trois numéros ; le premier est retenu comme téléphone
+    // principal, les deux autres sont cités dans la description.
+    name: 'Sonia Hôtel',
+    categories: ['Hôtellerie', 'Restauration'],
+    address: 'Secteur 6, Rue Mogho Naaba Kiba (6.10), à côté de TCV, Ouagadougou (01 BP 2606 Ouaga 01)',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 01 61 61 61',
+    whatsapp: null,                    // aucun numéro WhatsApp publié
+    facebook: 'https://www.facebook.com/SoniaHotelsOuagadougou',
+    instagram: null,                   // seuls Facebook et Google Maps sont liés
+    website: 'https://soniahotels.com',
+    openingHours: null,                // aucun horaire publié
+    description: "Hôtel 4 étoiles du centre-ville, à deux minutes de l'aéroport international. 80 chambres avec internet haut débit gratuit, téléviseurs connectés et climatisation individuelle. L'établissement réunit plusieurs restaurants et bars (Chez Mona, Marhaba, Mojos, The Sugar Club, Shimmers) ainsi qu'un service en chambre, une piscine, le spa et centre de remise en forme Body and Soul, et l'espace événementiel et de conférence Le Rendez-Vous. Les clients des Club Suites accèdent au salon VIP Shimmers. Autres numéros : +226 58 61 61 61 et +226 58 50 50 50. E-mail : info@soniahotels.com.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
