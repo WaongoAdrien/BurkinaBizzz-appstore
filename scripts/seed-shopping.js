@@ -101,6 +101,24 @@ const VENUES = [
     openingHours: null,
     description: "Boutique de pagnes de Samandin, sur le même goudron que l'OCECOS (DGEC) et le lycée Saint-Joseph. Bogolan, batik, woodin et kente, vendus au complet de trois pagnes. Livraison dans Ouagadougou et expédition partout au Burkina Faso et à l'étranger. TikTok : @lebeaupagne. E-mail : lebeaupagnebf@gmail.com.",
   },
+  {
+    // Source : page Facebook officielle (profile.php?id=100064042953343),
+    // consultée dans le navigateur — catégorie Facebook « Retail company »,
+    // 29 K abonnés. La section « Contact info » ne publie qu'un téléphone :
+    // ni e-mail, ni site, ni numéro WhatsApp.
+    name: "Class'en boubou",
+    // Le champ « Address » de la page ne donne que le quartier.
+    address: 'Zone 1, Ouagadougou',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 72 61 53 08',
+    whatsapp: null,                    // aucun numéro WhatsApp publié
+    facebook: 'https://www.facebook.com/profile.php?id=100064042953343',
+    instagram: null,
+    website: null,
+    // Facebook n'affiche que « Closed now », sans grille hebdomadaire.
+    openingHours: null,
+    description: "Boutique de la Zone 1 spécialisée dans la vente de boubous et de sandales / nu-pieds. La page propose la prise de rendez-vous en ligne (bouton « Book now »).",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
