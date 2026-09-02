@@ -14,7 +14,7 @@ import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 registerTranslations({
   'Entreprises': 'Businesses',
   'Voir toutes les catégories': 'Browse all categories',
-  'Produits à vendre': 'Products for sale',
+  'Market': 'Market',
   'Négociez sur WhatsApp': 'Negotiate on WhatsApp',
   'Applications utiles': 'Useful apps',
   'Les meilleures apps': 'The best apps for living in and visiting the country',
@@ -156,7 +156,7 @@ export default function MoreScreen() {
             <PhotoTile
               image={MARKET_TILE_IMAGE}
               iconName="pricetag"
-              title="Produits à vendre"
+              title="Market"
               subtitle="Négociez sur WhatsApp"
               onPress={() => router.push('/product-categories')}
             />
