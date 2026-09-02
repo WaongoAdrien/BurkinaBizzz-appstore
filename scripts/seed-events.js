@@ -13,6 +13,9 @@
 //     valeurs présentes : réutiliser une catégorie existante quand c'est
 //     possible (Culture, Musique, Danse, Sport, Mode, Tradition, Gastronomie…).
 //   - Un champ absent reste null — aucune valeur n'est inventée.
+//   - `id` explicite : sert à reprendre une fiche déjà créée depuis le panneau
+//     admin, qui porte un ID aléatoire. Le garde-fou par nom est alors inutile
+//     puisque c'est bien cette fiche-là que l'on vise.
 //
 // Les fiches existantes ont été créées depuis le panneau admin et portent des
 // IDs aléatoires ; elles ne sont pas gérées ici. Le garde-fou par nom empêche
@@ -73,6 +76,28 @@ const EVENTS = [
     image: null,                       // aucune image libre de droits disponible
     description: "Festival international de conte de Bobo-Dioulasso, dont l'édition 2026 se tient du 23 au 30 décembre. La programmation réunit conteurs et artistes burkinabè et internationaux.",
   },
+  {
+    // Fiche déjà créée depuis le panneau admin (ID aléatoire), reprise ici pour
+    // être mise à jour avec les informations de l'édition 2026.
+    //
+    // Sources : site officiel recreatrales.org (présentation du festival,
+    // contacts et liens sociaux) et l'annonce de la 14e édition reprise par
+    // Burkina24 le 28 février 2026 : « Du 24 au 31 octobre 2026, Ouagadougou
+    // accueillera la 14ᵉ édition des Récréâtrales. »
+    id: 'tiaMHr7X9Btu9DvZhflr',
+    name: 'Les Récréâtrales',
+    category: 'Culture',
+    location: 'Ouagadougou',
+    date: '2026-10-24',
+    endDate: '2026-10-31',
+    phone: '+226 68 24 20 00',
+    website: 'https://recreatrales.org',
+    facebook: 'https://www.facebook.com/recreatrales.recreatrales',
+    mapLink: null,
+    // `image` est volontairement absent : la mise à jour préserve l'image déjà
+    // renseignée depuis l'admin (voir le merge dans main()).
+    description: "Espace panafricain d'écriture, de création, de recherche et de diffusion théâtrales, initié en 2002. Le processus se déroule de février à novembre, tous les deux ans, et s'articule en quatre temps : Les Connivences (formation, février), Le Côté Cour (résidences de recherche, juin), Les Résidences (création et production, septembre-octobre) puis la plateforme festival, dix jours de représentations publiques. Il réunit plus de 150 artistes, auteurs, metteurs en scène, scénographes et comédiens dans les cours familiales de Bougsemtenga, à Gounghin : la rue 9.32 accueille pour l'occasion une scénographie urbaine de 610 mètres. La 14e édition se tient du 24 au 31 octobre 2026 sur le thème « Obliger à beauté », avec une quinzaine de spectacles et autant de pays invités, une création musicale jouée en cour et un volet associant blessés de guerre, veuves et orphelins. Siège : rue 9.32, Gounghin (Bougsemtenga), 04 BP 630 Ouagadougou 04, ouvert du lundi au samedi de 8h à 17h. Second numéro : +226 71 02 27 77. E-mail : admrecreatrales@gmail.com.",
+  },
 ];
 
 async function main() {
@@ -89,9 +114,9 @@ async function main() {
 
   let created = 0, updated = 0, skipped = 0;
 
-  for (const ev of EVENTS) {
-    const id = docId(ev.name);
-    const clash = byName.get(ev.name.toLowerCase().trim());
+  for (const { id: explicitId, ...ev } of EVENTS) {
+    const id = explicitId || docId(ev.name);
+    const clash = explicitId ? null : byName.get(ev.name.toLowerCase().trim());
 
     if (clash && clash !== id) {
       console.log(`⚠ ignoré  ${id} — un événement "${ev.name}" existe déjà (${clash})`);
