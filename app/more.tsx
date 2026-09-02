@@ -45,7 +45,7 @@ const JOBS_TILE_IMAGE = require('../assets/images/buildingfasob.jpeg');
 
 // Visuels hébergés (GitHub Pages) pour les tuiles entreprises / marché / apps.
 const BUSINESS_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/liza-mall.jpg' };
-const MARKET_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/market.jpg' };
+const MARKET_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/samsung.webp' };
 const APPS_TILE_IMAGE = { uri: 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/ouaga-echangeur.jpg' };
 
 // ── Your contact number ───────────────────────────────────────────────────────
