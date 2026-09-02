@@ -67,7 +67,7 @@ function PhotoTile({ image, iconName, title, subtitle, onPress }: {
     <TouchableOpacity style={styles.tile} onPress={onPress} activeOpacity={0.85}>
       <Image source={image} style={styles.tileImage} resizeMode="cover" />
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.78)']}
+        colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.72)', 'rgba(0,0,0,0.92)']}
         style={styles.tileScrim}
       />
       <View style={styles.tileContent}>
@@ -273,14 +273,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12, shadowRadius: 4,
   },
   tileImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  tileScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '70%' },
+  // Le dégradé couvre 85 % de la hauteur et descend jusqu'à un noir quasi opaque :
+  // les libellés blancs restent lisibles même sur une photo claire ou chargée.
+  tileScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '85%' },
   tileContent: { position: 'absolute', left: 12, right: 12, bottom: 12 },
   tileIconBadge: {
     width: 30, height: 30, borderRadius: 15, marginBottom: 8,
-    backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.32)', alignItems: 'center', justifyContent: 'center',
   },
-  tileTitle: { color: '#fff', fontSize: 14, fontWeight: '400', lineHeight: 18 },
-  tileSub: { color: 'rgba(255,255,255,0.85)', fontSize: 11, marginTop: 2 },
+  // L'ombre portée détache le texte des zones claires que le dégradé ne noircit pas.
+  tileTitle: {
+    color: '#fff', fontSize: 14, fontWeight: '500', lineHeight: 18,
+    textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+  },
+  tileSub: {
+    color: 'rgba(255,255,255,0.95)', fontSize: 11, marginTop: 2,
+    textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+  },
 
   submitCtaWrap: { marginBottom: 24, borderRadius: 10, elevation: 6, shadowColor: Colors.headerGradient[0], shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 10 },
   submitCta: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 18, gap: 14 },
