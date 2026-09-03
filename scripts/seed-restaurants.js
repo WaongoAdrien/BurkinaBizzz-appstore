@@ -171,6 +171,27 @@ const VENUES = [
     // Même exploitant que L'Hédone Hôtel (téléphone et e-mail identiques).
     relatedBusinessId: 'l-hedone-hotel-ouagadougou',
   },
+  {
+    // Source : page Facebook officielle (facebook.com/Felicitaprime), consultée
+    // dans le navigateur — catégorie Facebook « Restaurant ».
+    // Le champ « Address » de la page pointe sur l'aéroport international, ce
+    // qui contredit la bio : on retient le repère donné par l'établissement
+    // lui-même (1200 Logements, près de l'église Saint-Camille), confirmé par
+    // le lien Google Maps qu'il publie (Plus Code 9G73+HR, 1200 Logements).
+    name: 'Felicita Prime',
+    // Les coordonnées viennent de la résolution de ce Plus Code.
+    address: "1200 Logements, non loin de l'église Saint-Camille, Ouagadougou",
+    latitude: 12.3638781, longitude: -1.4954969,
+    phone: '+226 04 83 35 37',
+    whatsapp: '+226 03 04 81 81',      // déclaré dans le champ « WhatsApp number »
+    facebook: 'https://www.facebook.com/Felicitaprime',
+    instagram: null,                   // seul un compte TikTok est lié
+    website: null,                     // aucun site web publié
+    // La page indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Restaurant, pâtisserie et bar des 1200 Logements, à deux pas de l'église Saint-Camille. Ouvert en continu. TikTok : @felicita.prime5.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
