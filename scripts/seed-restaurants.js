@@ -192,6 +192,27 @@ const VENUES = [
     openingHours: everyDay('00:00', '00:00'),
     description: "Restaurant, pâtisserie et bar des 1200 Logements, à deux pas de l'église Saint-Camille. Ouvert en continu. TikTok : @felicita.prime5.",
   },
+  {
+    // Sources : page Facebook officielle (profile.php?id=100063536562658) et
+    // site levinnouveau.com. La page est classée « Wine/spirits » sur Facebook
+    // mais se présente elle-même comme un restaurant, et le site n'est qu'un
+    // site de restaurant (menu, commande en ligne, événements).
+    //
+    // L'établissement a déménagé : la bio et une publication épinglée annoncent
+    // le 7e étage de l'immeuble Liza Market, avenue Kwame Nkrumah.
+    name: 'Le Vin Nouveau',
+    address: "7e étage de l'immeuble Liza Market, avenue Kwame Nkrumah, Ouagadougou",
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 57 03 75 75',
+    whatsapp: '+226 57 03 75 75',      // déclaré dans le champ « WhatsApp number »
+    facebook: 'https://www.facebook.com/profile.php?id=100063536562658',
+    instagram: null,
+    website: 'https://levinnouveau.com',
+    // Facebook affiche « Open now » sans détailler la semaine, et le site ne
+    // publie aucun horaire : pas de quoi reconstituer une grille, donc null.
+    openingHours: null,
+    description: "Restaurant de l'avenue Kwame Nkrumah, installé au 7e étage de l'immeuble Liza Market depuis son déménagement. Carte d'entrées, plats chauds, desserts et boissons, menu de la semaine à commander en ligne avant 11h, plats à emporter et livraison. La maison organise aussi des rendez-vous réguliers — buffet du jeudi, soirées en amoureux, ateliers de peinture, ruptures du jeûne — et assure un service traiteur pour cérémonies et événements. E-mail : contact@levinnouveau.com.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
