@@ -64,6 +64,23 @@ const APPS = [
     image: 'https://play-lh.googleusercontent.com/12USW7aflgz466ifDehKTnMoAep_VHxDmKJ6jEBoDZWCSefOC-ThRX14Mqe0r8KF9XCzrpMqJts=s512-rw',
     order: 6,
   },
+  {
+    // Sources : page Facebook officielle (facebook.com/kaysexpressapp), site
+    // kaysexpress.com — d'où viennent les liens de stores, la page Facebook ne
+    // publiant que des raccourcis shorturl.at — App Store (id 6754810748,
+    // éditeur Youssouf Woumtana) et Google Play
+    // (com.toogoon.taxi.customer.toogoon_taxi_rider_app_v2, éditeur Heven Inc.).
+    // Seule l'app client est référencée ici ; l'app conducteur & livreur
+    // (com.toogoon.toogoon_driver_v2) ne concerne pas le grand public.
+    name: 'Kays Express',
+    category: 'Transport',
+    description: "Commandez une course VTC ou un livreur à Ouagadougou et Bobo-Dioulasso. Chauffeur trouvé en quelques touches à partir de votre position, tarif estimé avant la commande, suivi du chauffeur ou du colis en temps réel sur la carte, partage du trajet avec vos proches, historique et reçus téléchargeables. Paiement en espèces ou par mobile money. Une offre entreprise, Kays Express Pro, propose facturation centralisée et suivi des déplacements des collaborateurs.",
+    androidUrl: 'https://play.google.com/store/apps/details?id=com.toogoon.taxi.customer.toogoon_taxi_rider_app_v2',
+    iosUrl: 'https://apps.apple.com/app/id6754810748',
+    website: 'https://kaysexpress.com',
+    image: 'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/54/c2/84/54c284bd-45e5-6cf7-bde9-a7fd9f1ab3f2/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/512x512bb.jpg',
+    order: 7,
+  },
 ];
 
 async function main() {
