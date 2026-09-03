@@ -213,6 +213,29 @@ const VENUES = [
     openingHours: null,
     description: "Restaurant de l'avenue Kwame Nkrumah, installé au 7e étage de l'immeuble Liza Market depuis son déménagement. Carte d'entrées, plats chauds, desserts et boissons, menu de la semaine à commander en ligne avant 11h, plats à emporter et livraison. La maison organise aussi des rendez-vous réguliers — buffet du jeudi, soirées en amoureux, ateliers de peinture, ruptures du jeûne — et assure un service traiteur pour cérémonies et événements. E-mail : contact@levinnouveau.com.",
   },
+  {
+    // Source : page Facebook officielle (facebook.com/Avantvol), consultée dans
+    // le navigateur — catégorie Facebook « Restaurant », 29 K abonnés, 86 % de
+    // recommandations sur 7 avis. Téléphone et WhatsApp sont deux numéros
+    // distincts, tous deux déclarés dans « Contact info ».
+    //
+    // L'établissement est à Loumbila, pas à Ouagadougou. `city` reste
+    // 'Ouagadougou' — l'annuaire ne requête que les villes de CITIES
+    // (constants/index.ts) et la fiche serait invisible autrement ; l'adresse,
+    // elle, indique la vraie localisation.
+    name: 'Escale Village Loumbila',
+    address: 'Kossoghin à droite, Loumbila',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 57 47 00 00',
+    whatsapp: '+226 54 83 62 52',
+    facebook: 'https://www.facebook.com/Avantvol',
+    instagram: null,
+    website: null,                     // aucun site web publié
+    // La page indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Restaurant routier et service traiteur à Loumbila, sur la route de Kaya : l'adresse accueille les voyageurs à Kossoghin à droite, à une vingtaine de kilomètres de Ouagadougou. Ouvert en continu. L'établissement anime aussi des rendez-vous réguliers, dont ses journées Escale Village. E-mail : escalevillageloumbila@gmail.com.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
