@@ -51,6 +51,19 @@ const APPS = [
     image: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/00/e6/e4/00e6e43b-c97d-a896-3fe6-31e5c4421d42/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg',
     order: 5,
   },
+  {
+    // Sources : fiche Google Play (com.fasozaaka.faso_zaaka, éditeur
+    // « Faso Zaaka », mise à jour du 11 août 2026, catégorie « House & Home »)
+    // et site officiel fasozaaka.com. Aucune version iOS : une recherche sur
+    // l'App Store ne renvoie aucune fiche de l'éditeur.
+    name: 'Faso Zaaka',
+    category: 'Immobilier',
+    description: "Application immobilière burkinabè pour chercher, louer, acheter, vendre ou publier un bien au Burkina Faso. Maisons, appartements, villas, résidences meublées, terrains et parcelles à Ouagadougou, Bobo-Dioulasso et ailleurs, avec filtres par ville, quartier, budget et type de bien. Photos, prix et descriptions consultables avant la visite, contact direct avec l'annonceur et négociation du loyer ou de la caution dans l'application. Les propriétaires, agences et démarcheurs peuvent publier et gérer leurs annonces depuis leur compte.",
+    androidUrl: 'https://play.google.com/store/apps/details?id=com.fasozaaka.faso_zaaka',
+    website: 'https://fasozaaka.com',
+    image: 'https://play-lh.googleusercontent.com/12USW7aflgz466ifDehKTnMoAep_VHxDmKJ6jEBoDZWCSefOC-ThRX14Mqe0r8KF9XCzrpMqJts=s512-rw',
+    order: 6,
+  },
 ];
 
 async function main() {
