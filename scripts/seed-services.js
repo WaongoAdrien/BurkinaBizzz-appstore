@@ -57,6 +57,29 @@ const VENUES = [
     openingHours: null,
     description: "Équipe de photographes et vidéastes d'événements basée à Ouagadougou : fiançailles, mariages, baptêmes, anniversaires et autres événements privés, avec des images livrées dans les délais. L'enseigne tient également un studio photo ouvert 7j/7. E-mail : destinypicturesbf@gmail.com.",
   },
+  {
+    // Source : page Facebook officielle (facebook.com/sdfinternationale, nom
+    // affiché « SDF Voyage »), consultée dans le navigateur — catégorie
+    // Facebook « Local business », 9,2 K abonnés.
+    //
+    // Le champ « Contact info » ne donne qu'un mobile ; les autres numéros
+    // vus (25 50 50 21, 63 90 96 95) viennent de publications, dont une de
+    // 2023 : seul le numéro déclaré par la page est retenu comme téléphone,
+    // le standard étant cité dans la description.
+    name: 'SDF Voyage',
+    categories: ['Services'],
+    address: 'Rue 10.60, secteur 8, Hamdallaye, Ouagadougou',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 67 26 01 68',
+    whatsapp: null,                    // aucun numéro WhatsApp publié
+    facebook: 'https://www.facebook.com/sdfinternationale',
+    instagram: null,
+    // La page renvoie vers sdfvoyage.online, mais le domaine ne résout plus
+    // (NXDOMAIN) — non retenu.
+    website: null,
+    openingHours: null,                // aucun horaire publié
+    description: "Agence de voyage de Ouagadougou, à Hamdallaye : billetterie, assistance visa, assurance voyage, hébergement, réservations, organisation de voyages touristiques, location de voitures et conseils. Standard annoncé sur ses supports : +226 25 50 50 21. E-mail : sdfvoyage@gmail.com.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
