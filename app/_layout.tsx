@@ -12,6 +12,7 @@ import { registerForPushNotifications, routeForNotification } from '../lib/push'
 registerTranslations({
   'Annuaire 🔍': 'Directory 🔍',
   'Catégories': 'Categories',
+  'Entreprise': 'Business',
   'Découvrir': 'Discover',
   'Sites touristiques': 'Tourist sites',
   'À propos du Burkina Faso': 'About Burkina Faso',
@@ -95,22 +96,7 @@ function RootStack() {
         <Stack.Screen name="more" options={{ title: t('Découvrir') }} />
         <Stack.Screen name="tourism-sites" options={{ title: t('Sites touristiques') }} />
         <Stack.Screen name="about-burkina" options={{ title: t('À propos du Burkina Faso'), headerShown: true }} />
-        {/* Fiche entreprise : barre transparente et sans titre dès la première
-            frame, pour que l'écran de chargement ne montre pas un en-tête qui
-            disparaît ensuite. La photo passe dessous, seule la flèche reste. */}
-        <Stack.Screen
-          name="business/[id]"
-          options={{
-            headerShown: true,
-            headerTransparent: true,
-            headerTitle: '',
-            headerBackground: () => null,
-            headerShadowVisible: false,
-            // La flèche flotte sur le fond de page, clair : il lui faut une
-            // teinte sombre, à l'inverse du blanc des autres écrans.
-            headerTintColor: '#1A1A1A',
-          }}
-        />
+        <Stack.Screen name="business/[id]" options={{ title: t('Entreprise'), headerShown: true }} />
         <Stack.Screen name="tourism/[id]" options={{ title: t('Site touristique'), headerShown: true }} />
         <Stack.Screen name="evenement/[id]" options={{ title: t('Événement'), headerShown: true }} />
         <Stack.Screen name="auth" options={{ title: t('Connexion'), presentation: 'modal' }} />

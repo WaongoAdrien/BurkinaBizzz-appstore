@@ -8,7 +8,6 @@ import {
   StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   doc, getDoc, collection, query, orderBy,
@@ -103,10 +102,8 @@ registerTranslations({
 
 const { width } = Dimensions.get('window');
 
-// Hauteur de la barre de navigation native, celle où flotte la flèche de retour.
-// Le contenu démarre en dessous pour que le haut de la photo ne passe pas
-// derrière l'heure ni derrière la flèche.
-const HEADER_HEIGHT = Platform.OS === 'ios' ? 44 : 56;
+// Un peu d'air entre l'en-tête et la photo, qui touchait la barre auparavant.
+const PHOTO_TOP_SPACING = 20;
 
 // ── Star Rating Component ─────────────────────────────────────────────────────
 function StarRating({ rating, size = 20, onPress }: { rating: number; size?: number; onPress?: (r: number) => void }) {
@@ -171,7 +168,7 @@ function SectionHeader({ icon, color, title, theme }: { icon: keyof typeof Ionic
   return (
     <View style={shStyles.row}>
       <View style={[shStyles.badge, { backgroundColor: color + '22' }]}>
-        <Ionicons name={icon} size={16} color={color} />
+        <Ionicons name={icon} size={18} color={color} />
       </View>
       <Text style={[shStyles.title, { color: theme.text }]}>{title}</Text>
     </View>
@@ -198,7 +195,6 @@ export default function BusinessDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
   const [showImageViewer, setShowImageViewer] = useState(false);
-  const insets = useSafeAreaInsets();
   const [viewerPhotoIndex, setViewerPhotoIndex] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
   const [nameWidth, setNameWidth] = useState(0);
@@ -452,20 +448,17 @@ export default function BusinessDetailScreen() {
   return (
     <>
       <Stack.Screen options={{
-        // Barre transparente et sans titre : la photo occupe tout le haut de
-        // l'écran et seule la flèche de retour native reste visible par-dessus.
-        headerTransparent: true,
-        headerTitle: '',
-        headerBackground: () => null,
-        headerShadowVisible: false,
+        title: business.name,
         headerShown: true,
         headerBackVisible: true,
         headerBackTitle: '',
-        headerTintColor: '#1A1A1A',
+        headerTitleStyle: {
+          fontSize: 16,
+        },
         headerRight: () => (
           isAdmin ? (
             <TouchableOpacity onPress={handleTogglePin} style={styles.headerBtn}>
-              <Ionicons name={business.pinned ? "pin" : "pin-outline"} size={22} color="#1A1A1A" />
+              <Ionicons name={business.pinned ? "pin" : "pin-outline"} size={22} color="#fff" />
             </TouchableOpacity>
           ) : null
         ),
@@ -475,12 +468,10 @@ export default function BusinessDetailScreen() {
         colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
         style={{ flex: 1 }}
       >
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-
       <ScrollView
         ref={scrollRef}
         style={styles.container}
-        contentContainerStyle={{ paddingTop: insets.top + HEADER_HEIGHT }}
+        contentContainerStyle={{ paddingTop: PHOTO_TOP_SPACING }}
         showsVerticalScrollIndicator={false}
       >
 
