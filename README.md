@@ -258,3 +258,6 @@ Le numéro doit être au format international: `+22670000000`
 **Build EAS échoue**
 → Vérifiez que `projectId` dans `app.json` est correct
 # BurkinaBizzz-appstore
+
+Not to delete this 
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
