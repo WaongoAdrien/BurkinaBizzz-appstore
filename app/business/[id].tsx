@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   doc, getDoc, collection, query, orderBy,
@@ -102,6 +103,11 @@ registerTranslations({
 
 const { width } = Dimensions.get('window');
 
+// Hauteur de la barre de navigation native, celle où flotte la flèche de retour.
+// Le contenu démarre en dessous pour que le haut de la photo ne passe pas
+// derrière l'heure ni derrière la flèche.
+const HEADER_HEIGHT = Platform.OS === 'ios' ? 44 : 56;
+
 // ── Star Rating Component ─────────────────────────────────────────────────────
 function StarRating({ rating, size = 20, onPress }: { rating: number; size?: number; onPress?: (r: number) => void }) {
   return (
@@ -192,8 +198,7 @@ export default function BusinessDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
   const [showImageViewer, setShowImageViewer] = useState(false);
-  // Passe à true dès que la photo d'en-tête est dépassée (cf. barre système).
-  const [heroPassed, setHeroPassed] = useState(false);
+  const insets = useSafeAreaInsets();
   const [viewerPhotoIndex, setViewerPhotoIndex] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
   const [nameWidth, setNameWidth] = useState(0);
@@ -456,11 +461,11 @@ export default function BusinessDetailScreen() {
         headerShown: true,
         headerBackVisible: true,
         headerBackTitle: '',
-        headerTintColor: '#fff',
+        headerTintColor: '#1A1A1A',
         headerRight: () => (
           isAdmin ? (
             <TouchableOpacity onPress={handleTogglePin} style={styles.headerBtn}>
-              <Ionicons name={business.pinned ? "pin" : "pin-outline"} size={22} color="#fff" />
+              <Ionicons name={business.pinned ? "pin" : "pin-outline"} size={22} color="#1A1A1A" />
             </TouchableOpacity>
           ) : null
         ),
@@ -470,20 +475,13 @@ export default function BusinessDetailScreen() {
         colors={(theme.backgroundGradient || [theme.background, theme.background]) as [string, string, ...string[]]}
         style={{ flex: 1 }}
       >
-      {/* En haut, le texte de la barre système se lit sur la photo (clair) ; une
-          fois la photo dépassée, il se lit sur le fond de page (sombre). */}
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={heroPassed ? 'dark-content' : 'light-content'}
-      />
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
 
       <ScrollView
         ref={scrollRef}
         style={styles.container}
+        contentContainerStyle={{ paddingTop: insets.top + HEADER_HEIGHT }}
         showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={e => setHeroPassed(e.nativeEvent.contentOffset.y > 200)}
       >
 
         {/* PINNED BANNER */}
@@ -530,12 +528,6 @@ export default function BusinessDetailScreen() {
                     </TouchableOpacity>
                   )}
                 />
-                {/* Sans ce voile, la flèche blanche disparaît sur une photo claire. */}
-                <LinearGradient
-                  colors={['rgba(0,0,0,0.45)', 'transparent']}
-                  style={styles.headerScrim}
-                  pointerEvents="none"
-                />
                 {photos.length > 1 && (
                   <View style={styles.dotRow}>
                     {photos.map((_, i) => (
@@ -546,11 +538,6 @@ export default function BusinessDetailScreen() {
               </View>
             ) : (
               <View style={[styles.photoPlaceholder, { backgroundColor: (cat?.color || Colors.primary) + '22' }]}>
-                <LinearGradient
-                  colors={['rgba(0,0,0,0.35)', 'transparent']}
-                  style={styles.headerScrim}
-                  pointerEvents="none"
-                />
                 {cat ? (
                   <CategoryIcon iconName={cat.icon} iconFamily={cat.iconFamily} size={72} color={cat.color} />
                 ) : (
@@ -1037,7 +1024,6 @@ const styles = StyleSheet.create({
   pinnedBanner: { paddingVertical: 8, paddingHorizontal: 16, alignItems: 'center' },
   pinnedText: { fontSize: 13, fontWeight: '400' },
   photo: { height: 280, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
-  headerScrim: { position: 'absolute', top: 0, left: 0, right: 0, height: 130 },
   photoPlaceholder: { height: 220, alignItems: 'center', justifyContent: 'center', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   avatarWrap: { alignItems: 'flex-start', paddingHorizontal: 16, marginTop: -40, zIndex: 5 },
   avatarCircle: {

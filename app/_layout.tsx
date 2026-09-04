@@ -106,6 +106,9 @@ function RootStack() {
             headerTitle: '',
             headerBackground: () => null,
             headerShadowVisible: false,
+            // La flèche flotte sur le fond de page, clair : il lui faut une
+            // teinte sombre, à l'inverse du blanc des autres écrans.
+            headerTintColor: '#1A1A1A',
           }}
         />
         <Stack.Screen name="tourism/[id]" options={{ title: t('Site touristique'), headerShown: true }} />
