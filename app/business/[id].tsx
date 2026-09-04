@@ -103,7 +103,15 @@ registerTranslations({
 const { width } = Dimensions.get('window');
 
 // Un peu d'air entre l'en-tête et la photo, qui touchait la barre auparavant.
-const PHOTO_TOP_SPACING = 20;
+//dont update this number 
+const PHOTO_TOP_SPACING = 0;
+
+// ── Hauteur de la photo d'en-tête ───────────────────────────────────────────
+// À ajuster ici, et nulle part ailleurs : la valeur sert à la fois au cadre de
+// la galerie et à l'image elle-même, qui doivent rester d'accord.
+// PLACEHOLDER_HEIGHT est le pavé d'icône affiché quand la fiche n'a pas de photo.
+const PHOTO_HEIGHT = 340;
+const PLACEHOLDER_HEIGHT = 260;
 
 // ── Star Rating Component ─────────────────────────────────────────────────────
 function StarRating({ rating, size = 20, onPress }: { rating: number; size?: number; onPress?: (r: number) => void }) {
@@ -493,7 +501,7 @@ export default function BusinessDetailScreen() {
         <View style={{ width: '100%', alignItems: 'center' }}>
           <View style={{ width: '100%', maxWidth: width }}>
             {photos.length > 0 ? (
-              <View style={{ width: '100%', height: 280, marginBottom: 16, position: 'relative' }}>
+              <View style={{ width: '100%', height: PHOTO_HEIGHT, marginBottom: 16, position: 'relative' }}>
                 <FlatList
                   data={photos} 
                   horizontal 
@@ -1014,8 +1022,8 @@ const styles = StyleSheet.create({
   },
   pinnedBanner: { paddingVertical: 8, paddingHorizontal: 16, alignItems: 'center' },
   pinnedText: { fontSize: 13, fontWeight: '400' },
-  photo: { height: 280, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
-  photoPlaceholder: { height: 220, alignItems: 'center', justifyContent: 'center', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+  photo: { height: PHOTO_HEIGHT, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+  photoPlaceholder: { height: PLACEHOLDER_HEIGHT, alignItems: 'center', justifyContent: 'center', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   avatarWrap: { alignItems: 'flex-start', paddingHorizontal: 16, marginTop: -40, zIndex: 5 },
   avatarCircle: {
     width: 80, height: 80, borderRadius: 40, borderWidth: 3, overflow: 'hidden', backgroundColor: '#fff',
