@@ -85,6 +85,10 @@ function RootStack() {
         headerTintColor: '#FFFFFF',
         headerTitleStyle: { fontWeight: '400', fontSize: 18 },
         headerBackTitle: '',
+        // React Navigation 7 ignore headerBackTitle: '' et retombe sur le titre
+        // de l'écran précédent — d'où le « Annuaire » collé à la flèche.
+        // 'minimal' ne laisse que la flèche, sur tous les écrans.
+        headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: isDark ? Colors.dark.background : Colors.light.background },
       }}>
         <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: '' }} />
