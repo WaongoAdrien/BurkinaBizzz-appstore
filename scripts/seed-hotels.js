@@ -342,6 +342,29 @@ const VENUES = [
     openingHours: null,                // aucun horaire publié
     description: "Hôtel 4 étoiles du centre-ville, à deux minutes de l'aéroport international. 80 chambres avec internet haut débit gratuit, téléviseurs connectés et climatisation individuelle. L'établissement réunit plusieurs restaurants et bars (Chez Mona, Marhaba, Mojos, The Sugar Club, Shimmers) ainsi qu'un service en chambre, une piscine, le spa et centre de remise en forme Body and Soul, et l'espace événementiel et de conférence Le Rendez-Vous. Les clients des Club Suites accèdent au salon VIP Shimmers. Autres numéros : +226 58 61 61 61 et +226 58 50 50 50. E-mail : info@soniahotels.com.",
   },
+  {
+    // Sources : page Facebook officielle (facebook.com/hotelsissiman) —
+    // catégorie « Hotel resort », 15 K abonnés, 98 % de recommandations sur
+    // 445 avis — et site officiel hotelsissiman.com, qui précise le secteur.
+    //
+    // Seule fiche hors Ouagadougou de ce seed : `city` est explicite, et
+    // Bobo-Dioulasso fait bien partie de CITIES (constants/index.ts), donc la
+    // fiche est visible dans l'annuaire.
+    name: 'Hôtel Sissiman',
+    city: 'Bobo-Dioulasso',
+    address: 'Sarfalao, secteur 17, Bobo-Dioulasso (01 BP 1245)',
+    latitude: null, longitude: null,   // coordonnées non publiées
+    phone: '+226 20 98 01 08',
+    // La page affiche un bouton WhatsApp mais ne déclare aucun numéro dédié.
+    whatsapp: null,
+    facebook: 'https://www.facebook.com/hotelsissiman',
+    instagram: null,
+    website: 'https://hotelsissiman.com',
+    // La page indique « Always open ».
+    // open === close dans lib/openingHours.ts = ouvert 24h/24.
+    openingHours: everyDay('00:00', '00:00'),
+    description: "Hôtel 4 étoiles du quartier Sarfalao, à Bobo-Dioulasso : 62 chambres réparties en huit catégories, des chambres standard aux suites émeraude, en passant par les doubles supérieures et deluxe, les suites junior et les appartements F2 et F4. Restaurant gastronomique de cuisine africaine et internationale, bar américain, piscine extérieure avec terrasse et bar, salle de fitness, spa et salles de conférence équipées. L'établissement abrite aussi une école hôtelière, la Sissiman International Hotel School. Second numéro : +226 74 24 29 29. E-mail : resa@hotelsissiman.com.",
+  },
 ];
 
 seedBusinesses(VENUES, CATEGORY).then(() => process.exit(0)).catch(err => {
