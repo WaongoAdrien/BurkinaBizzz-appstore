@@ -1,10 +1,13 @@
-import { Stack } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Stack, useRouter } from 'expo-router';
 import { useColorScheme, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthProvider } from '../lib/AuthContext';
 import { LanguageProvider, useTranslation, registerTranslations } from '../lib/LanguageContext';
 import { Colors } from '../constants';
 import { TabBar } from '../components/TabBar';
+import { registerForPushNotifications, routeForNotification } from '../lib/push';
 
 registerTranslations({
   'Annuaire 🔍': 'Directory 🔍',
@@ -39,9 +42,42 @@ const HeaderBackground = () => (
   />
 );
 
+// Enregistre le terminal au démarrage et ouvre la fiche concernée quand
+// l'utilisateur touche une notification — au lancement à froid comme à chaud.
+function usePushNotifications() {
+  const router = useRouter();
+  // Le routeur n'est pas prêt à la première frame : on garde la route reçue au
+  // lancement à froid et on ne navigue qu'après le premier rendu.
+  const pendingRoute = useRef<string | null>(null);
+
+  useEffect(() => {
+    registerForPushNotifications();
+
+    Notifications.getLastNotificationResponseAsync().then(response => {
+      const route = routeForNotification(response?.notification.request.content.data);
+      if (route) pendingRoute.current = route;
+    });
+
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const route = routeForNotification(response.notification.request.content.data);
+      if (route) router.push(route as any);
+    });
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!pendingRoute.current) return;
+    const route = pendingRoute.current;
+    pendingRoute.current = null;
+    const id = setTimeout(() => router.push(route as any), 0);
+    return () => clearTimeout(id);
+  });
+}
+
 function RootStack() {
   const isDark = useColorScheme() === 'dark';
   const { t } = useTranslation();
+  usePushNotifications();
   return (
     <View style={{ flex: 1 }}>
       <Stack screenOptions={{

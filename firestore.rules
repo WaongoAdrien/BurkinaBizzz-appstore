@@ -123,6 +123,23 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // ── PUSH TOKENS ──────────────────────────────────────────────────────
+    // Toute installation s'enregistre, connectée ou non : c'est le seul moyen
+    // de prévenir les visiteurs qui n'ont pas de compte. Trois garde-fous
+    // compensent l'écriture ouverte :
+    //   - l'ID du document doit être le jeton lui-même (pas d'écriture en
+    //     rafale sous des IDs choisis au hasard),
+    //   - seuls trois champs sont acceptés, aucun ne pouvant servir de stockage,
+    //   - la lecture reste réservée à l'admin ; l'envoi passe par le SDK Admin
+    //     (scripts/notify-new.js), qui ignore ces règles.
+    match /pushTokens/{token} {
+      allow read: if isAdmin();
+      allow create, update: if request.resource.data.keys().hasOnly(['token', 'platform', 'updatedAt'])
+                            && request.resource.data.token == token
+                            && token.size() < 200;
+      allow delete: if isAdmin();
+    }
+
     // ── REPORTS ──────────────────────────────────────────────────────────
     match /reports/{reportId} {
       // Only admins can view the moderation queue

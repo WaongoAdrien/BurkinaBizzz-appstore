@@ -29,6 +29,9 @@
             ]
           }
         ]
+      },
+      "entitlements": {
+        "aps-environment": "production"
       }
     },
     "android": {
@@ -41,7 +44,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
@@ -62,6 +66,13 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2E7D32",
+          "defaultChannel": "default"
         }
       ],
       [
