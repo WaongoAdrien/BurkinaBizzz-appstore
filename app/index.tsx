@@ -15,7 +15,7 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
-  "L'annuaire des entreprises fiables!": 'The directory of trusted businesses!',
+  'Découvrir le Burkina à travers ses entreprises': 'Discover Burkina through its businesses',
   'Burkina Faso': 'Burkina Faso',
   'Local': 'Local',
   'Utilisateurs': 'Users',
@@ -142,7 +142,7 @@ export default function HomeScreen() {
             <View>
               <Text style={styles.flag}></Text>
               <Text style={styles.appTitle}>BurkinaBizz</Text>
-              <Text style={styles.tagline}>{t("L'annuaire des entreprises fiables!")}</Text>
+              <Text style={styles.tagline}>{t('Découvrir le Burkina à travers ses entreprises')}</Text>
             </View>
             <LanguageSwitcher />
           </View>
