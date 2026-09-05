@@ -28,7 +28,7 @@ registerTranslations({
   'Parcs, réserves et paysages sauvages du Burkina Faso 🐘': "Parks, reserves and wild landscapes of Burkina Faso 🐘",
   'Naaba Koom, Ouagadougou': 'Naaba Koom, Ouagadougou',
   'Un monument emblématique de la capitale 🏛️': 'An iconic landmark of the capital 🏛️',
-  'BurkinaBizz 2026 — Gratuit et ne vend aucun produit.': 'BurkinaBizz 2026 — Free to use and does not sell any product.',
+  'BurkinaBizz 2026': 'BurkinaBizz 2026',
   'Découvrir le Burkina Faso': 'Discover Burkina Faso',
   'Découvrir': 'Discover',
   'Événements locaux': 'Local events',
@@ -317,7 +317,7 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <Text style={styles.disclaimer}>{t('BurkinaBizz 2026 — Gratuit et ne vend aucun produit.')}</Text>
+        <Text style={styles.disclaimer}>{t('BurkinaBizz 2026')}</Text>
 
         <View style={{ height: 32 }} />
         </ContentContainer>

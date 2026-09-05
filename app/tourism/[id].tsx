@@ -13,6 +13,7 @@ import { Colors } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { useAuth } from '../../lib/AuthContext';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
+import { RichText, stripRichMarkup } from '../../components/RichText';
 import { Attraction, normalizeUrl } from '../tourism-sites';
 import { EditContentModal } from '../../components/EditContentModal';
 
@@ -73,7 +74,7 @@ export default function TourismSiteDetailScreen() {
 
   const handleShare = () => {
     Share.share({
-      message: `${site.name}\n${site.location}\n\n${site.description?.slice(0, 100)}...`,
+      message: `${site.name}\n${site.location}\n\n${stripRichMarkup(site.description).slice(0, 100)}...`,
       title: site.name,
     });
   };
@@ -179,7 +180,7 @@ export default function TourismSiteDetailScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('À propos')}</Text>
               </View>
-              <Text style={[styles.descText, { color: theme.textSecondary }]}>{site.description}</Text>
+              <RichText style={[styles.descText, { color: theme.textSecondary }]}>{site.description}</RichText>
             </View>
           ) : null}
 

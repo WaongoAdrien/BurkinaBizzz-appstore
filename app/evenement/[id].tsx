@@ -13,6 +13,7 @@ import { Colors } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { useAuth } from '../../lib/AuthContext';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
+import { RichText, stripRichMarkup } from '../../components/RichText';
 import { EventItem, normalizeUrl } from '../evenement';
 import { EditContentModal } from '../../components/EditContentModal';
 import { formatEventDateRange } from '../../lib/eventDate';
@@ -68,7 +69,7 @@ export default function EventDetailScreen() {
 
   const handleShare = () => {
     Share.share({
-      message: `${event.name}\n${event.location}\n\n${event.description?.slice(0, 100)}...`,
+      message: `${event.name}\n${event.location}\n\n${stripRichMarkup(event.description).slice(0, 100)}...`,
       title: event.name,
     });
   };
@@ -141,7 +142,7 @@ export default function EventDetailScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('À propos')}</Text>
               </View>
-              <Text style={[styles.descText, { color: theme.textSecondary }]}>{event.description}</Text>
+              <RichText style={[styles.descText, { color: theme.textSecondary }]}>{event.description}</RichText>
             </View>
           ) : null}
 
