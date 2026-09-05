@@ -104,8 +104,12 @@ const GEOGRAPHY_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/
 const MOSQUE_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Moschee_von_Bobo-Dioulasso.jpg/1280px-Moschee_von_Bobo-Dioulasso.jpg';
 // Traditional Kasena dancers, Tiébélé — Zaongo Christian Marie Michel, CC BY-SA 4.0 (Wikimedia Commons)
 const DANCERS_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Ti%C3%A9b%C3%A9l%C3%A9.jpg/1280px-Ti%C3%A9b%C3%A9l%C3%A9.jpg';
-// New culture sections, sourced from visiteburkina.com/culture
-const ART_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1771174260/mario-la-pergola-u6qz22_ygoi-unsplash_1_.jpg_kg3paz.webp';
+// New culture sections, sourced from visiteburkina.com/culture.
+// ⚠ Les trois visuels Cloudinary ci-dessous ne s'affichent plus : le compte
+// dapmfpr1t est désactivé (« cloud_name dapmfpr1t is disabled », HTTP 401),
+// donc toutes ses URL sont mortes, transformations ou non. À remplacer comme
+// ART_IMAGE l'a été, par une image hébergée sur picture_Burkina_Bizz.
+const ART_IMAGE = 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/cite-poterie.jpeg';
 const BELIEFS_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1769562576/arton54844-2973e_ertjhd.jpg';
 const CUISINE_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1769562780/Tot-%C3%A0-la-sauce-gombo_xut0tg.jpg';
 const TEXTILES_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1771174432/MnUne_qcafos.jpg';
