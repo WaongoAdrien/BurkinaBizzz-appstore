@@ -15,7 +15,8 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useTranslation, registerTranslations } from '../lib/LanguageContext';
 
 registerTranslations({
-  'Découvrir le Burkina à travers ses entreprises': 'Discover Burkina through its businesses',
+  // Coupure explicite : la ligne complète débordait sur les petits écrans.
+  'Découvrir le Burkina à travers\nses entreprises': 'Discover Burkina through\nits businesses',
   'Burkina Faso': 'Burkina Faso',
   'Local': 'Local',
   'Utilisateurs': 'Users',
@@ -142,7 +143,7 @@ export default function HomeScreen() {
             <View>
               <Text style={styles.flag}></Text>
               <Text style={styles.appTitle}>BurkinaBizz</Text>
-              <Text style={styles.tagline}>{t('Découvrir le Burkina à travers ses entreprises')}</Text>
+              <Text style={styles.tagline}>{t('Découvrir le Burkina à travers\nses entreprises')}</Text>
             </View>
             <LanguageSwitcher />
           </View>
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   flag: { fontSize: 32 },
   appTitle: { fontSize: 28, fontWeight: '600', color: '#fff', letterSpacing: -0.5, marginTop: 18 },
-  tagline: { fontSize: 13, color: '#A5D6A7', marginTop: 2 },
+  tagline: { fontSize: 13, color: '#A5D6A7', marginTop: 2, lineHeight: 18 },
   dashPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, marginTop: 10, height:65, justifyContent:'center', alignItems:'center' },
   dashPillText: { color: '#fff', fontWeight: '400', fontSize: 13 },
   scroll: { flex: 1 },
