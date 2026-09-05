@@ -47,7 +47,7 @@ registerTranslations({
   'Croyances et spiritualité': 'Beliefs and spirituality',
   "Aux côtés de l'islam et du christianisme, les religions traditionnelles africaines restent profondément ancrées dans la société burkinabè. Cultes des ancêtres, rites d'initiation et sites naturels sacrés — mares, bois et collines — structurent encore aujourd'hui la vie spirituelle de nombreuses communautés, dans un esprit de coexistence pacifique entre les croyances.":
     "Alongside Islam and Christianity, traditional African religions remain deeply rooted in Burkinabè society. Ancestor worship, initiation rites, and sacred natural sites — ponds, groves, and hills — still shape the spiritual life of many communities today, in a spirit of peaceful coexistence between faiths.",
-  'Rite traditionnel burkinabè': 'Traditional Burkinabè ritual',
+  'Dialogue interreligieux au Burkina Faso': 'Interfaith dialogue in Burkina Faso',
   'Cuisine et gastronomie': 'Cuisine and gastronomy',
   "La cuisine burkinabè repose sur des céréales locales — mil, sorgho et maïs — souvent servies en pâte (tô) accompagnée de sauces à base de gombo, de feuilles de baobab ou d'arachide. Riz gras, poulet bicyclette et brochettes grillées complètent un répertoire culinaire convivial, généralement partagé en famille ou entre voisins.":
     "Burkinabè cuisine is built on local grains — millet, sorghum, and corn — often served as a paste (tô) with okra, baobab leaf, or peanut-based sauces. Riz gras, free-range \"bicycle chicken,\" and grilled skewers round out a convivial culinary repertoire, typically shared among family or neighbors.",
@@ -55,7 +55,7 @@ registerTranslations({
   'Habits traditionnels et textiles': 'Traditional dress and textiles',
   "Le boubou ample, le faso dan fani (tissu tissé à la main) et les parures perlées marquent les grandes occasions — mariages, baptêmes et fêtes coutumières. Le faso dan fani, en particulier, est devenu un symbole de fierté nationale et de valorisation du savoir-faire textile local depuis les années 1990.":
     "The flowing boubou, faso dan fani (hand-woven cloth), and beaded ornaments mark major occasions — weddings, baptisms, and traditional festivals. Faso dan fani in particular has become a symbol of national pride and of championing local textile craftsmanship since the 1990s.",
-  'Tissage traditionnel du faso dan fani': 'Traditional weaving of faso dan fani',
+  'Pagnes en faso dan fani sur un étal de marché': 'Faso dan fani cloth on a market stall',
   'Visa électronique (eVisa)': 'Electronic visa (eVisa)',
   'Site officiel visaburkina.bf': 'Official site visaburkina.bf',
   'Fiche de voyage officielle': 'Official travel advisory',
@@ -104,16 +104,13 @@ const GEOGRAPHY_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/
 const MOSQUE_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Moschee_von_Bobo-Dioulasso.jpg/1280px-Moschee_von_Bobo-Dioulasso.jpg';
 // Traditional Kasena dancers, Tiébélé — Zaongo Christian Marie Michel, CC BY-SA 4.0 (Wikimedia Commons)
 const DANCERS_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Ti%C3%A9b%C3%A9l%C3%A9.jpg/1280px-Ti%C3%A9b%C3%A9l%C3%A9.jpg';
-// New culture sections, sourced from visiteburkina.com/culture.
-// ⚠ BELIEFS_IMAGE et TEXTILES_IMAGE ne s'affichent plus : le compte Cloudinary
-// dapmfpr1t est désactivé (« cloud_name dapmfpr1t is disabled », HTTP 401),
-// donc toutes ses URL sont mortes, transformations ou non. À remplacer comme
-// ART_IMAGE et CUISINE_IMAGE l'ont été, par une image hébergée sur
-// picture_Burkina_Bizz.
+// Sections culture. Les visuels venaient du compte Cloudinary dapmfpr1t,
+// désactivé depuis (« cloud_name dapmfpr1t is disabled », HTTP 401) : ils sont
+// tous repris sur picture_Burkina_Bizz, comme les tuiles de Découvrir.
 const ART_IMAGE = 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/cite-poterie.jpeg';
-const BELIEFS_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1769562576/arton54844-2973e_ertjhd.jpg';
+const BELIEFS_IMAGE = 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/religionburkina.jpg';
 const CUISINE_IMAGE = 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/foirgastronomie.jpg';
-const TEXTILES_IMAGE = 'https://res.cloudinary.com/dapmfpr1t/image/upload/f_auto,q_auto,w_3840,c_fill/v1771174432/MnUne_qcafos.jpg';
+const TEXTILES_IMAGE = 'https://waongoadrien.github.io/picture_Burkina_Bizz/img/habittraditionel.jpg';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -324,7 +321,7 @@ export default function AboutBurkinaScreen() {
             <Text style={styles.paragraph}>
               {t("Aux côtés de l'islam et du christianisme, les religions traditionnelles africaines restent profondément ancrées dans la société burkinabè. Cultes des ancêtres, rites d'initiation et sites naturels sacrés — mares, bois et collines — structurent encore aujourd'hui la vie spirituelle de nombreuses communautés, dans un esprit de coexistence pacifique entre les croyances.")}
             </Text>
-            <SectionImage uri={BELIEFS_IMAGE} caption={t('Rite traditionnel burkinabè')} />
+            <SectionImage uri={BELIEFS_IMAGE} caption={t('Dialogue interreligieux au Burkina Faso')} />
           </Section>
 
           <Section title={t('Cuisine et gastronomie')}>
@@ -338,7 +335,7 @@ export default function AboutBurkinaScreen() {
             <Text style={styles.paragraph}>
               {t("Le boubou ample, le faso dan fani (tissu tissé à la main) et les parures perlées marquent les grandes occasions — mariages, baptêmes et fêtes coutumières. Le faso dan fani, en particulier, est devenu un symbole de fierté nationale et de valorisation du savoir-faire textile local depuis les années 1990.")}
             </Text>
-            <SectionImage uri={TEXTILES_IMAGE} caption={t('Tissage traditionnel du faso dan fani')} />
+            <SectionImage uri={TEXTILES_IMAGE} caption={t('Pagnes en faso dan fani sur un étal de marché')} />
           </Section>
 
           {/* TOURISM CTA */}
