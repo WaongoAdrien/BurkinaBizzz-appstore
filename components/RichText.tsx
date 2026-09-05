@@ -17,7 +17,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from 'react';
-import { Text, TextStyle, StyleProp } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet, TextStyle, StyleProp } from 'react-native';
+import { useTranslation, registerTranslations } from '../lib/LanguageContext';
+
+registerTranslations({
+  'Aperçu': 'Preview',
+});
 
 // Palette volontairement sourde : ces couleurs se posent sur des cartes
 // blanches et doivent rester lisibles en paragraphe, pas claquer comme un
@@ -92,3 +97,75 @@ export function RichText({ children, style }: { children?: string | null; style?
   if (!children) return null;
   return <Text style={style}>{parse(children)}</Text>;
 }
+
+
+// ── Saisie ───────────────────────────────────────────────────────────────────
+// Barre de mise en forme et aperçu, partagés par le panneau admin et les
+// formulaires vendeur. `onWrap` reçoit les balises à poser autour de la
+// sélection : c'est l'appelant qui connaît la position du curseur, puisque
+// c'est lui qui tient le TextInput.
+export function RichToolbar({ onWrap, borderColor, textColor }: {
+  onWrap: (open: string, close: string) => void;
+  borderColor?: string;
+  textColor?: string;
+}) {
+  return (
+    <View style={editStyles.bar}>
+      <TouchableOpacity style={[editStyles.btn, { borderColor }]} onPress={() => onWrap('**', '**')}>
+        <Text style={[editStyles.btnText, { color: textColor, fontWeight: '700' }]}>G</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[editStyles.btn, { borderColor }]} onPress={() => onWrap('*', '*')}>
+        <Text style={[editStyles.btnText, { color: textColor, fontStyle: 'italic' }]}>I</Text>
+      </TouchableOpacity>
+      {(Object.keys(RICH_COLORS) as (keyof typeof RICH_COLORS)[]).map(name => (
+        <TouchableOpacity
+          key={name}
+          style={[editStyles.btn, { borderColor }]}
+          onPress={() => onWrap(`[${name}]`, `[/${name}]`)}
+        >
+          <View style={[editStyles.dot, { backgroundColor: RICH_COLORS[name] }]} />
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// Ce que verra le visiteur, balises interprétées.
+export function RichPreview({ children, borderColor, labelColor, textColor }: {
+  children?: string | null;
+  borderColor?: string;
+  labelColor?: string;
+  textColor?: string;
+}) {
+  const { t } = useTranslation();
+  if (!children) return null;
+  return (
+    <View style={[editStyles.preview, { borderColor }]}>
+      <Text style={[editStyles.previewLabel, { color: labelColor }]}>{t('Aperçu')}</Text>
+      <RichText style={[editStyles.previewText, { color: textColor }]}>{children}</RichText>
+    </View>
+  );
+}
+
+// Entoure la sélection des balises, ou insère un gabarit à écraser quand rien
+// n'est sélectionné. Utilisé par tous les champs qui acceptent la mise en forme.
+export function wrapSelection(
+  text: string,
+  selection: { start: number; end: number },
+  open: string,
+  close: string,
+): string {
+  const { start, end } = selection;
+  const selected = text.slice(start, end) || 'texte';
+  return text.slice(0, start) + open + selected + close + text.slice(end);
+}
+
+const editStyles = StyleSheet.create({
+  bar: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  btn: { width: 34, height: 34, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  btnText: { fontSize: 14 },
+  dot: { width: 14, height: 14, borderRadius: 7 },
+  preview: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 },
+  previewLabel: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 },
+  previewText: { fontSize: 13, lineHeight: 19 },
+});

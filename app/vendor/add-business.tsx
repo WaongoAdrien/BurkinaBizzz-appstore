@@ -21,6 +21,7 @@ import { Category, City, BusinessLocation, OpeningHours } from '../../types';
 import { defaultOpeningHours } from '../../lib/openingHours';
 import { OpeningHoursEditor } from '../../components/OpeningHoursEditor';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
+import { RichToolbar, RichPreview, wrapSelection } from '../../components/RichText';
 
 registerTranslations({
   'optionnel': 'optional',
@@ -128,25 +129,45 @@ interface FieldProps {
   label: string; value: string; onChangeText: (t: string) => void;
   placeholder: string; keyboardType?: any; multiline?: boolean;
   maxLength?: number; error?: string; optional?: boolean;
+  // Active la barre de mise en forme et l'aperçu (cf. components/RichText.tsx).
+  rich?: boolean;
   borderColor: string; surfaceColor: string; textColor: string; secondaryColor: string;
 }
 function Field({ label, value, onChangeText, placeholder, keyboardType = 'default',
-  multiline = false, maxLength, error, optional, borderColor, surfaceColor, textColor, secondaryColor }: FieldProps) {
+  multiline = false, maxLength, error, optional, rich = false,
+  borderColor, surfaceColor, textColor, secondaryColor }: FieldProps) {
   const { t } = useTranslation();
+  // Position du curseur, pour que les boutons de mise en forme entourent la
+  // sélection plutôt que d'écrire en fin de texte.
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
+
   return (
     <View style={styles.fieldWrapper}>
       <View style={styles.labelRow}>
         <Text style={[styles.fieldLabel, { color: textColor }]}>{label}</Text>
         {optional && <Text style={[styles.optionalTag, { color: secondaryColor }]}>{t('optionnel')}</Text>}
       </View>
+      {rich && (
+        <RichToolbar
+          borderColor={borderColor}
+          textColor={textColor}
+          onWrap={(open, close) => onChangeText(wrapSelection(value, selection, open, close))}
+        />
+      )}
       <TextInput
         style={[styles.input, multiline && styles.textArea,
           { borderColor: error ? '#D32F2F' : borderColor, backgroundColor: surfaceColor, color: textColor }]}
         value={value} onChangeText={onChangeText} placeholder={placeholder}
         placeholderTextColor={secondaryColor} keyboardType={keyboardType}
         multiline={multiline} numberOfLines={multiline ? 4 : 1}
+        onSelectionChange={rich ? e => setSelection(e.nativeEvent.selection) : undefined}
         maxLength={maxLength} autoCorrect={false} autoCapitalize="none"
       />
+      {rich && (
+        <RichPreview borderColor={borderColor} labelColor={secondaryColor} textColor={textColor}>
+          {value}
+        </RichPreview>
+      )}
       {error ? <Text style={styles.errorText}>{t(error)}</Text> : null}
     </View>
   );
@@ -507,7 +528,7 @@ export default function AddBusinessScreen() {
             </View>
 
             <Field label={t('Description *')} value={description} onChangeText={setDescription}
-              placeholder={t('Services proposés, horaires, spécialités...')} multiline maxLength={600} error={errors.description} {...fp} />
+              placeholder={t('Services proposés, horaires, spécialités...')} multiline maxLength={600} rich error={errors.description} {...fp} />
           </View>
         )}
 

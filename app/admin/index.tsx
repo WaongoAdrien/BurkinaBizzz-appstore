@@ -19,7 +19,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { Colors } from '../../constants';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
-import { RichText, RICH_COLORS } from '../../components/RichText';
+import { RichToolbar, RichPreview, wrapSelection } from '../../components/RichText';
 import LocationPicker from '../../components/Locationpicker';
 import { DatePickerModal } from '../../components/DatePickerModal';
 import { formatEventDate, TBD_DATE } from '../../lib/eventDate';
@@ -363,12 +363,7 @@ export default function AdminScreen() {
   // Entoure la sélection des balises lues par components/RichText.tsx.
   // Sans sélection, insère un gabarit que l'admin n'a plus qu'à écraser.
   const wrapDescription = (open: string, close: string) => {
-    setContentForm(prev => {
-      const text = prev.description;
-      const { start, end } = descSelection;
-      const selected = text.slice(start, end) || 'texte';
-      return { ...prev, description: text.slice(0, start) + open + selected + close + text.slice(end) };
-    });
+    setContentForm(prev => ({ ...prev, description: wrapSelection(prev.description, descSelection, open, close) }));
   };
   const [savingContent, setSavingContent] = useState(false);
   const [locationPickerVisible, setLocationPickerVisible] = useState(false);
@@ -2307,23 +2302,7 @@ export default function AdminScreen() {
 
               {/* Mise en forme : les boutons entourent la sélection de balises,
                   relues à l'affichage par RichText. */}
-              <View style={styles.richBar}>
-                <TouchableOpacity style={[styles.richBtn, { borderColor: theme.border }]} onPress={() => wrapDescription('**', '**')}>
-                  <Text style={[styles.richBtnText, { color: theme.text, fontWeight: '700' }]}>G</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.richBtn, { borderColor: theme.border }]} onPress={() => wrapDescription('*', '*')}>
-                  <Text style={[styles.richBtnText, { color: theme.text, fontStyle: 'italic' }]}>I</Text>
-                </TouchableOpacity>
-                {(Object.keys(RICH_COLORS) as (keyof typeof RICH_COLORS)[]).map(name => (
-                  <TouchableOpacity
-                    key={name}
-                    style={[styles.richBtn, { borderColor: theme.border }]}
-                    onPress={() => wrapDescription(`[${name}]`, `[/${name}]`)}
-                  >
-                    <View style={[styles.richDot, { backgroundColor: RICH_COLORS[name] }]} />
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <RichToolbar borderColor={theme.border} textColor={theme.text} onWrap={wrapDescription} />
 
               <TextInput
                 style={[styles.fieldInput, styles.fieldInputMultiline, { borderColor: theme.border, color: theme.text }]}
@@ -2336,13 +2315,9 @@ export default function AdminScreen() {
                 numberOfLines={4}
               />
 
-              {/* Aperçu : ce que verra le visiteur, balises interprétées. */}
-              {contentForm.description ? (
-                <View style={[styles.richPreview, { borderColor: theme.border }]}>
-                  <Text style={[styles.richPreviewLabel, { color: theme.textSecondary }]}>{t('Aperçu')}</Text>
-                  <RichText style={[styles.richPreviewText, { color: theme.text }]}>{contentForm.description}</RichText>
-                </View>
-              ) : null}
+              <RichPreview borderColor={theme.border} labelColor={theme.textSecondary} textColor={theme.text}>
+                {contentForm.description}
+              </RichPreview>
             </ScrollView>
             <View style={styles.modalBtns}>
               <TouchableOpacity
@@ -2829,13 +2804,6 @@ const styles = StyleSheet.create({
   modalBtn: { flex: 1, paddingVertical: 13, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   modalBtnText: { fontSize: 15, fontWeight: '400' },
   fieldLabel: { fontSize: 12, fontWeight: '400', marginBottom: 5, marginTop: 10 },
-  richBar: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  richBtn: { width: 34, height: 34, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  richBtnText: { fontSize: 14 },
-  richDot: { width: 14, height: 14, borderRadius: 7 },
-  richPreview: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 },
-  richPreviewLabel: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 },
-  richPreviewText: { fontSize: 13, lineHeight: 19 },
   fieldInput: { borderWidth: 1.5, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
   clearDateBtn: { width: 42, height: 42, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   fieldInputMultiline: { minHeight: 80, textAlignVertical: 'top' },

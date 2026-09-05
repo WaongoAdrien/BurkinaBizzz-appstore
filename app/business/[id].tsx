@@ -27,6 +27,7 @@ import { ContentContainer } from '../../components/ContentContainer';
 import { OpeningHoursStatus } from '../../components/OpeningHoursStatus';
 import { OpeningHoursWeekly } from '../../components/OpeningHoursWeekly';
 import { useTranslation, registerTranslations } from '../../lib/LanguageContext';
+import { RichText, stripRichMarkup } from '../../components/RichText';
 
 registerTranslations({
   'Utilisateur': 'User',
@@ -306,7 +307,7 @@ export default function BusinessDetailScreen() {
     if (!business) return;
     try {
       await Share.share({
-        message: `${business.name}\n${business.city} • ${business.category}\n\n${business.description?.slice(0, 100)}...\n\n${t('Trouvé sur BurkinaBizz')}`,
+        message: `${business.name}\n${business.city} • ${business.category}\n\n${stripRichMarkup(business.description).slice(0, 100)}...\n\n${t('Trouvé sur BurkinaBizz')}`,
         title: business.name,
       });
     } catch {}
@@ -649,7 +650,7 @@ export default function BusinessDetailScreen() {
           {/* DESCRIPTION */}
           <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
             <SectionHeader icon="document-text-outline" color={Colors.primary} title={t('À propos')} theme={theme} />
-            <Text style={[styles.description, { color: theme.textSecondary }]}>{business.description}</Text>
+            <RichText style={[styles.description, { color: theme.textSecondary }]}>{business.description}</RichText>
           </View>
 
           {/* VOIR AUSSI — links to a related listing (e.g. a second branch/location) */}
